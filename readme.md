@@ -71,11 +71,10 @@ PowerPlan to mobilna aplikacja wspierająca planowanie treningów i monitorowani
 
 Dla każdego zadania/epika powinniśmy potwierdzić następujące kryteria:
 
-- **Implementacja backendu i API:** endpointy przetestowane, dokumentacja 
-- **Frontend:** ekran rejestracji/logowania, ekran planu treningowego, ekran rejestracji treningu 
+- **Implementacja backendu i API:** endpointy przetestowane, dokumentacja
+- **Frontend:** ekran rejestracji/logowania, ekran planu treningowego, ekran rejestracji treningu
 - **Wydajność:** odpowiedzi API na typowe zapytania (np. logowanie, zapis treningu) poniżej 2 sekund przy normalnym obciążeniu (w miarę możliwości testów)
 - **Dokumentacja:** instrukcja uruchomienia (README), link do repozytorium, podstawowa dokumentacja techniczna
-
 
 ---
 
@@ -93,19 +92,18 @@ Dla każdego zadania/epika powinniśmy potwierdzić następujące kryteria:
 
 ### Backend
 
-- **Język:** C# / .NET 
+- **Język:** C# / .NET
 - **Baza danych:** PostgreSQL
 
 ### Frontend
 
 - **Framework:** React Native
-- **Stylowanie:** Tailwind 
-- **Zarządzanie danymi:** TanStack Query 
+- **Stylowanie:** Tailwind
+- **Zarządzanie danymi:** TanStack Query
 
 ### Infrastruktura
 
-- **Repozytorium:** monorepo 
-
+- **Repozytorium:** monorepo
 
 ---
 
@@ -128,33 +126,97 @@ Zespół liczy 3 osoby:
 - **Kontrola wersji:** Git + GitHub
 - **Komunikacja:** Discord
 
-
 ---
 
 ## Harmonogram – ważne daty
 
-| Data       | Ereignis                                                     |
-| ---------- | ------------------------------------------------------------ |
-| 19.10.2025 | Wstępne opracowanie opisu projektu aplikacji                 |
-
+| Data       | Ereignis                                     |
+| ---------- | -------------------------------------------- |
+| 19.10.2025 | Wstępne opracowanie opisu projektu aplikacji |
 
 ---
-
-
 
 ## Dokumentacja i zasoby
 
 - **Repozytorium GitHub:** https://github.com/Adriann77/PowerPlan
 - **Tablica JIRA:** https://mikolajgradecki00.atlassian.net/jira/software/projects/SCRUM/boards/1/backlog
-- **Dokumentacja techniczna:** do uzupełnienia 
-
+- **Dokumentacja techniczna:** do uzupełnienia
 
 ---
 
 ## Kontakt – Autorzy
 
-| Osoba            | Rola                         
-| ---------------- | ---------------------------- 
-| Adrian Klimas    | Frontend, kierownik projektu 
-| Mikołaj Grądecki | Backend, baza danych         
-| Sebastian Nowak  | Backend, baza danych         
+| Osoba            | Rola                         |
+| ---------------- | ---------------------------- |
+| Adrian Klimas    | Frontend, kierownik projektu |
+| Mikołaj Grądecki | Backend, baza danych         |
+| Sebastian Nowak  | Backend, baza danych         |
+
+# Project Task Plan (JIRA)
+
+## Sprint 1: 20.10.2025 – 20.11.2025
+
+### Epic: Database
+
+- Design database schemas (SQL)
+- Create initial migrations
+- Implement database connection in backend
+- Document database structure
+
+### Epic: Backend
+
+- Initialize backend project (.NET)
+- Implement user registration API
+- Implement user login API
+- Input data validation
+- Integrate with database (models, repositories)
+- Unit tests for registration/login
+
+### Epic: Frontend
+
+- Initialize mobile project (React Native)
+- Create UI for login screen
+- Create UI for registration screen
+- Integrate registration/login with API
+- Form validation on frontend
+
+---
+
+## Sprint 2: 21.11.2025 – 21.12.2025
+
+### Epic: Backend
+
+- Implement API for creating training plans
+- Implement API for editing and viewing training plans
+- Implement API for logging completed workouts
+- Store and provide training history
+- Unit and integration tests for new endpoints
+- API documentation (Swagger/OpenAPI)
+
+### Epic: Frontend
+
+- Create UI for training plan screen
+- Create UI for workout logging screen
+- Create UI for training history
+- Integrate training plans and workouts with API
+- Ensure responsiveness and test on multiple devices
+
+---
+
+## Sprint 3: 22.12.2025 – 22.01.2026
+
+### Epic: Backend
+
+- Implement API for progress visualization (tables, charts)
+- Add ready-made training plan templates
+- Implement export/import of plans (JSON/CSV)
+- Optimize API performance
+- Finalize technical documentation
+
+### Epic: Frontend
+
+- Create UI for progress visualization (tables, charts)
+- Add support for training plan templates
+- Add export/import functionality for plans
+- Finalize user documentation
+- Final testing and bug fixes

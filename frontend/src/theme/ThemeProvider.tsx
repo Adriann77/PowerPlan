@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useMemo } from 'react';
 import { ColorSchemeName, useColorScheme } from 'react-native';
 import { DarkTheme, DefaultTheme, Theme as NavigationTheme } from '@react-navigation/native';
-import { NativeWindStyleSheet } from 'nativewind';
 import { Theme as AppTheme, theme as baseTheme } from './theme';
 
 type ThemeContextValue = {
@@ -14,11 +13,6 @@ const ThemeContext = createContext<ThemeContextValue>({
   theme: baseTheme,
   colorScheme: 'dark',
   navigationTheme: DarkTheme,
-});
-
-NativeWindStyleSheet.setOutput({
-  web: 'web',
-  default: 'native',
 });
 
 type ThemeProviderProps = {

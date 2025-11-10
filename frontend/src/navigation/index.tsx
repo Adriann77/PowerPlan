@@ -7,6 +7,7 @@ import { PlansScreen } from '../screens/PlansScreen';
 import { WorkoutHistoryScreen } from '../screens/WorkoutHistoryScreen';
 import { ProgressScreen } from '../screens/ProgressScreen';
 import { WorkoutSessionScreen } from '../screens/WorkoutSessionScreen';
+import { useAuth } from '../providers/AuthProvider';
 
 export type AuthStackParamList = {
   Login: undefined;
@@ -33,8 +34,14 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 function AuthNavigator() {
   return (
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
-      <AuthStack.Screen name='Login' component={LoginScreen} />
-      <AuthStack.Screen name='Register' component={RegisterScreen} />
+      <AuthStack.Screen
+        name='Login'
+        component={LoginScreen}
+      />
+      <AuthStack.Screen
+        name='Register'
+        component={RegisterScreen}
+      />
     </AuthStack.Navigator>
   );
 }
@@ -42,20 +49,48 @@ function AuthNavigator() {
 function MainTabs() {
   return (
     <Tab.Navigator screenOptions={{ headerShown: false }}>
-      <Tab.Screen name='Home' component={HomeScreen} />
-      <Tab.Screen name='Plans' component={PlansScreen} />
-      <Tab.Screen name='WorkoutHistory' component={WorkoutHistoryScreen} />
-      <Tab.Screen name='Progress' component={ProgressScreen} />
+      <Tab.Screen
+        name='Home'
+        component={HomeScreen}
+      />
+      <Tab.Screen
+        name='Plans'
+        component={PlansScreen}
+      />
+      <Tab.Screen
+        name='WorkoutHistory'
+        component={WorkoutHistoryScreen}
+      />
+      <Tab.Screen
+        name='Progress'
+        component={ProgressScreen}
+      />
     </Tab.Navigator>
   );
 }
 
 export function RootNavigator() {
+  const { isAuthenticated } = useAuth();
+
   return (
-    <RootStack.Navigator screenOptions={{ headerShown: false }} initialRouteName='Auth'>
-      <RootStack.Screen name='Auth' component={AuthNavigator} />
-      <RootStack.Screen name='Main' component={MainTabs} />
-      <RootStack.Screen name='WorkoutSession' component={WorkoutSessionScreen} />
+    <RootStack.Navigator screenOptions={{ headerShown: false }}>
+      {isAuthenticated ? (
+        <>
+          <RootStack.Screen
+            name='Main'
+            component={MainTabs}
+          />
+          <RootStack.Screen
+            name='WorkoutSession'
+            component={WorkoutSessionScreen}
+          />
+        </>
+      ) : (
+        <RootStack.Screen
+          name='Auth'
+          component={AuthNavigator}
+        />
+      )}
     </RootStack.Navigator>
   );
 }

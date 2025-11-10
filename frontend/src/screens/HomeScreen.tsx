@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
-import { FlatList, Text, View } from 'react-native';
+import { FlatList, Text, TouchableOpacity, View } from 'react-native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { getActivePlan, mockWorkoutState } from '../data/mockData';
 import type { MainTabParamList } from '../navigation';
+import { useAuth } from '../providers/AuthProvider';
 import { useTheme } from '../theme';
 
 type HomeScreenProps = BottomTabScreenProps<MainTabParamList, 'Home'>;
@@ -10,6 +11,7 @@ type HomeScreenProps = BottomTabScreenProps<MainTabParamList, 'Home'>;
 export function HomeScreen(_props: HomeScreenProps) {
   const { theme } = useTheme();
   const activePlan = useMemo(() => getActivePlan(), []);
+  const { currentUser, logout } = useAuth();
 
   return (
     <View
@@ -27,8 +29,30 @@ export function HomeScreen(_props: HomeScreenProps) {
           marginBottom: theme.spacing.md,
         }}
       >
-        Welcome back, {mockWorkoutState.user.username}
+        Welcome back, {currentUser?.username ?? mockWorkoutState.user.username}
       </Text>
+      {currentUser ? (
+        <TouchableOpacity
+          onPress={logout}
+          style={{
+            alignSelf: 'flex-start',
+            backgroundColor: theme.palette.surface,
+            borderRadius: theme.radii.md,
+            paddingHorizontal: theme.spacing.md,
+            paddingVertical: theme.spacing.sm,
+            marginBottom: theme.spacing.lg,
+          }}
+        >
+          <Text
+            style={{
+              ...theme.typography.caption,
+              color: theme.palette.primary,
+            }}
+          >
+            Sign out
+          </Text>
+        </TouchableOpacity>
+      ) : null}
 
       <Text
         style={{
@@ -41,7 +65,9 @@ export function HomeScreen(_props: HomeScreenProps) {
       </Text>
 
       <FlatList
-        ItemSeparatorComponent={() => <View style={{ height: theme.spacing.md }} />}
+        ItemSeparatorComponent={() => (
+          <View style={{ height: theme.spacing.md }} />
+        )}
         data={activePlan?.trainingDays ?? []}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
@@ -78,7 +104,8 @@ export function HomeScreen(_props: HomeScreenProps) {
                 color: theme.palette.text.muted,
               }}
             >
-              {item.exercises.length} exercises • first move: {item.exercises[0]?.name ?? 'TBD'}
+              {item.exercises.length} exercises • first move:{' '}
+              {item.exercises[0]?.name ?? 'TBD'}
             </Text>
           </View>
         )}
@@ -90,7 +117,12 @@ export function HomeScreen(_props: HomeScreenProps) {
               padding: theme.spacing.lg,
             }}
           >
-            <Text style={{ ...theme.typography.body, color: theme.palette.text.secondary }}>
+            <Text
+              style={{
+                ...theme.typography.body,
+                color: theme.palette.text.secondary,
+              }}
+            >
               Training days will appear here once plans are configured.
             </Text>
           </View>

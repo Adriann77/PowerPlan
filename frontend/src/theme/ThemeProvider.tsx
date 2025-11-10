@@ -1,6 +1,10 @@
 import React, { createContext, useContext, useMemo } from 'react';
 import { ColorSchemeName, useColorScheme } from 'react-native';
-import { DarkTheme, DefaultTheme, Theme as NavigationTheme } from '@react-navigation/native';
+import {
+  DarkTheme,
+  DefaultTheme,
+  Theme as NavigationTheme,
+} from '@react-navigation/native';
 import { Theme as AppTheme, theme as baseTheme } from './theme';
 
 type ThemeContextValue = {
@@ -50,14 +54,15 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     () => ({
       theme: baseTheme,
       colorScheme,
-      navigationTheme: colorScheme === 'dark' ? navigationDarkTheme : navigationLightTheme,
+      navigationTheme:
+        colorScheme === 'dark' ? navigationDarkTheme : navigationLightTheme,
     }),
     [colorScheme],
   );
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+  );
 }
 
 export const useTheme = () => useContext(ThemeContext);
-
-

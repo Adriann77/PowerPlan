@@ -1,15 +1,13 @@
-import { useMemo } from 'react';
 import { FlatList, Text, View } from 'react-native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { getActivePlan, mockWorkoutState } from '../data/mockData';
+import { mockWorkoutState } from '../data/mockData';
 import type { MainTabParamList } from '../navigation';
 import { useTheme } from '../theme';
 
-type HomeScreenProps = BottomTabScreenProps<MainTabParamList, 'Home'>;
+type PlansScreenProps = BottomTabScreenProps<MainTabParamList, 'Plans'>;
 
-export function HomeScreen(_props: HomeScreenProps) {
+export function PlansScreen(_props: PlansScreenProps) {
   const { theme } = useTheme();
-  const activePlan = useMemo(() => getActivePlan(), []);
 
   return (
     <View
@@ -24,32 +22,23 @@ export function HomeScreen(_props: HomeScreenProps) {
         style={{
           ...theme.typography.heading1,
           color: theme.palette.text.primary,
-          marginBottom: theme.spacing.md,
-        }}
-      >
-        Welcome back, {mockWorkoutState.user.username}
-      </Text>
-
-      <Text
-        style={{
-          ...theme.typography.body,
-          color: theme.palette.text.secondary,
           marginBottom: theme.spacing.lg,
         }}
       >
-        Active plan • {activePlan?.name ?? 'No active plan assigned'}
+        Workout Plans
       </Text>
-
       <FlatList
+        data={mockWorkoutState.plans}
+        keyExtractor={(plan) => plan.id}
         ItemSeparatorComponent={() => <View style={{ height: theme.spacing.md }} />}
-        data={activePlan?.trainingDays ?? []}
-        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View
             style={{
-              backgroundColor: theme.palette.surface,
               borderRadius: theme.radii.lg,
               padding: theme.spacing.lg,
+              backgroundColor: item.isActive ? theme.palette.surfaceElevated : theme.palette.surface,
+              borderWidth: 1,
+              borderColor: item.isActive ? theme.palette.primary : theme.palette.border,
             }}
           >
             <Text
@@ -66,7 +55,7 @@ export function HomeScreen(_props: HomeScreenProps) {
                 style={{
                   ...theme.typography.body,
                   color: theme.palette.text.secondary,
-                  marginBottom: theme.spacing.md,
+                  marginBottom: theme.spacing.sm,
                 }}
               >
                 {item.description}
@@ -78,26 +67,15 @@ export function HomeScreen(_props: HomeScreenProps) {
                 color: theme.palette.text.muted,
               }}
             >
-              {item.exercises.length} exercises • first move: {item.exercises[0]?.name ?? 'TBD'}
+              {item.trainingDays.length} training days • {item.weekDuration}-week block
             </Text>
           </View>
         )}
-        ListEmptyComponent={
-          <View
-            style={{
-              backgroundColor: theme.palette.surface,
-              borderRadius: theme.radii.lg,
-              padding: theme.spacing.lg,
-            }}
-          >
-            <Text style={{ ...theme.typography.body, color: theme.palette.text.secondary }}>
-              Training days will appear here once plans are configured.
-            </Text>
-          </View>
-        }
       />
     </View>
   );
 }
 
-export default HomeScreen;
+export default PlansScreen;
+
+

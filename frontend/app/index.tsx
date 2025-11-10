@@ -1,5 +1,13 @@
-import { HomeScreen } from '../src/screens/HomeScreen';
+import { NavigationContainer } from '@react-navigation/native';
+import { RootNavigator } from '../src/navigation';
+import { useTheme } from '../src/theme';
 
 export default function Index() {
-  return <HomeScreen />;
+  const { navigationTheme } = useTheme();
+
+  return (
+    <NavigationContainer theme={navigationTheme}>
+      <RootNavigator />
+    </NavigationContainer>
+  );
 }

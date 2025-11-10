@@ -1,17 +1,13 @@
 import { Stack } from 'expo-router';
-import './globals.css';
+import '../src/theme/global.css';
+import { AppProvider } from '../src/providers/AppProvider';
 
 export default function RootLayout() {
   return (
-    <Stack>
-      <Stack.Screen
-        name='(tabs)'
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name='(movie)/movie/[id]'
-        options={{ headerShown: false }}
-      />
-    </Stack>
+    <AppProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name='index' />
+      </Stack>
+    </AppProvider>
   );
 }

@@ -1,3 +1,5 @@
+import type { TextStyle } from 'react-native';
+
 export const palette = {
   background: '#05010d',
   surface: '#151312',
@@ -31,15 +33,25 @@ export const radii = {
   md: 12,
   lg: 16,
   pill: 999,
+  full: 9999,
 };
 
-export const typography = {
+export const typography: {
+  fontFamily: string;
+  heading1: TextStyle;
+  heading2: TextStyle;
+  heading3: TextStyle;
+  body: TextStyle;
+  caption: TextStyle;
+  button: TextStyle;
+} = {
   fontFamily: 'System',
   heading1: { fontSize: 28, fontWeight: '700', lineHeight: 34 },
   heading2: { fontSize: 22, fontWeight: '600', lineHeight: 28 },
   heading3: { fontSize: 18, fontWeight: '600', lineHeight: 24 },
   body: { fontSize: 16, fontWeight: '400', lineHeight: 22 },
   caption: { fontSize: 13, fontWeight: '400', lineHeight: 18 },
+  button: { fontSize: 16, fontWeight: '600', lineHeight: 22 },
 };
 
 export const shadows = {
@@ -74,5 +86,3 @@ export const theme: Theme = {
   typography,
   shadows,
 };
-
-

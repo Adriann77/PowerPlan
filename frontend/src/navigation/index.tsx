@@ -7,6 +7,7 @@ import { PlansScreen } from '../screens/PlansScreen';
 import { WorkoutHistoryScreen } from '../screens/WorkoutHistoryScreen';
 import { ProgressScreen } from '../screens/ProgressScreen';
 import { WorkoutSessionScreen } from '../screens/WorkoutSessionScreen';
+import { DayExerciseScreen } from '../screens/DayExerciseScreen';
 import { useAuth } from '../providers/AuthProvider';
 
 export type AuthStackParamList = {
@@ -24,6 +25,7 @@ export type MainTabParamList = {
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
+  DayExercise: { trainingDayId: string };
   WorkoutSession: { trainingDayId: string };
 };
 
@@ -79,6 +81,10 @@ export function RootNavigator() {
           <RootStack.Screen
             name='Main'
             component={MainTabs}
+          />
+          <RootStack.Screen
+            name='DayExercise'
+            component={DayExerciseScreen}
           />
           <RootStack.Screen
             name='WorkoutSession'

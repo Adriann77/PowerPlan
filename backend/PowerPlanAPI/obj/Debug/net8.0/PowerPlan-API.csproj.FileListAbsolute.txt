@@ -1,8 +1,0 @@
-D:\zespolowy\PowerPlan\backend\PowerPlan-API\obj\Debug\net8.0\PowerPlan-API.csproj.AssemblyReference.cache
-D:\zespolowy\PowerPlan\backend\PowerPlan-API\obj\Debug\net8.0\PowerPlan-API.GeneratedMSBuildEditorConfig.editorconfig
-D:\zespolowy\PowerPlan\backend\PowerPlan-API\obj\Debug\net8.0\PowerPlan-API.AssemblyInfoInputs.cache
-D:\zespolowy\PowerPlan\backend\PowerPlan-API\obj\Debug\net8.0\PowerPlan-API.AssemblyInfo.cs
-D:\zespolowy\PowerPlan\backend\PowerPlan-API\obj\Debug\net8.0\PowerPlan-API.csproj.CoreCompileInputs.cache
-D:\zespolowy\PowerPlan\backend\PowerPlan-API\obj\Debug\net8.0\PowerPlan-API.MvcApplicationPartsAssemblyInfo.cs
-D:\zespolowy\PowerPlan\backend\PowerPlan-API\obj\Debug\net8.0\PowerPlan-API.MvcApplicationPartsAssemblyInfo.cache
-D:\zespolowy\PowerPlan\backend\PowerPlan-API\obj\Debug\net8.0\PowerPlan-API.sourcelink.json

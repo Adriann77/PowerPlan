@@ -1,0 +1,36 @@
+# .NET Core
+bin/
+obj/
+*.csproj.user
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Appsettings
+appsettings.Development.json
+appsettings.Local.json
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userprefs
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+bld/
+
+# Visual Studio cache
+.vscode/
+.idea/
+*.swp
+*.swn
+*.swo
+
+# Rider / VS Code
+.idea/
+*.iml

@@ -16,6 +16,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddControllers();
 
+
+
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var secret = builder.Configuration["Jwt:Secret"]
              ?? jwtSettings["Secret"]

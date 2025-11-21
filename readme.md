@@ -7,8 +7,13 @@ Grupa: 2
 
 ---
 
-## Table of Contents
+## Spis treści
 
+- [Wymagania systemowe](#wymagania-systemowe)
+- [Instalacja i konfiguracja](#instalacja-i-konfiguracja)
+- [Uruchamianie projektu](#uruchamianie-projektu)
+- [Konfiguracja](#konfiguracja)
+- [Rozwiązywanie problemów](#rozwiązywanie-problemów)
 - [Podsumowanie](#podsumowanie)
 - [Zakres funkcjonalny](#zakres-funkcjonalny)
   - [Podstawowe funkcjonalności](#podstawowe-funkcjonalności-must-have)
@@ -22,6 +27,293 @@ Grupa: 2
 - [Zarządzanie ryzykiem](#zarządzanie-ryzykiem)
 - [Dokumentacja i zasoby](#dokumentacja-i-zasoby)
 - [Kontakt](#kontakt--autorzy)
+
+---
+
+## Wymagania systemowe
+
+Przed rozpoczęciem pracy upewnij się, że masz zainstalowane następujące narzędzia:
+
+### Wymagania dla Backendu
+
+- **.NET SDK**: Wersja 8.0.416 lub nowsza
+  - Pobierz z: [https://dotnet.microsoft.com/download](https://dotnet.microsoft.com/download)
+- **PostgreSQL**: Dostęp do bazy danych PostgreSQL (lokalna lub zdalna)
+- **C#**: Wersja 10 lub nowsza (zawarta w .NET SDK)
+
+### Wymagania dla Frontendu
+
+- **Node.js**: Wersja 18.0.0 lub nowsza
+  - Pobierz z: [https://nodejs.org/](https://nodejs.org/)
+- **pnpm**: Wersja 8.0.0 lub nowsza
+  - Instalacja: `npm install -g pnpm` lub [https://pnpm.io/installation](https://pnpm.io/installation)
+- **Expo CLI**: Instalowany automatycznie wraz z zależnościami projektu
+
+### Szybka instalacja wszystkiego
+
+```bash
+# Instalacja wszystkich zależności (backend + frontend)
+npm run setup
+
+# Uruchomienie obu serwerów jednocześnie
+npm run dev
+```
+
+---
+
+## Instalacja i konfiguracja
+
+### Krok 1: Instalacja zależności
+
+#### Opcja A: Instalacja wszystkiego naraz (zalecane)
+
+Z głównego katalogu projektu wykonaj:
+
+```bash
+npm run setup
+```
+
+To polecenie automatycznie:
+
+- Zainstaluje zależności backendu (`dotnet restore`)
+- Zainstaluje zależności frontendu (`pnpm install`)
+
+#### Opcja B: Instalacja osobno
+
+**Backend:**
+
+```bash
+cd backend/PowerPlanAPI
+dotnet restore
+```
+
+**Frontend:**
+
+```bash
+cd frontend
+pnpm install
+```
+
+### Krok 2: Konfiguracja Backendu
+
+1. Przejdź do katalogu backendu:
+
+   ```bash
+   cd backend/PowerPlanAPI
+   ```
+
+2. Utwórz plik `appsettings.Development.json` (jeśli nie istnieje):
+
+   ```bash
+   cp appsettings.json appsettings.Development.json
+   ```
+
+3. Edytuj plik `appsettings.Development.json` i wypełnij wymagane wartości:
+
+   ```json
+   {
+     "Jwt": {
+       "Secret": "twoj-super-tajny-klucz-jwt-minimum-32-znaki-dlugosci",
+       "Issuer": "PowerPlanAPI",
+       "Audience": "PowerPlanApp"
+     },
+     "ConnectionStrings": {
+       "Postgres": "Host=twoj-host;Port=5432;Database=twoja-baza;Username=twoj-user;Password=twoje-haslo;SSL Mode=Require;Trust Server Certificate=true;Pooling=true;Keepalive=60;Command Timeout=300;"
+     }
+   }
+   ```
+
+   **Ważne:**
+
+   - Klucz JWT Secret musi mieć minimum 32 znaki (128 bitów) ze względów bezpieczeństwa
+   - Możesz wygenerować bezpieczny klucz używając: `openssl rand -base64 32`
+
+### Krok 3: Konfiguracja Frontendu
+
+1. Przejdź do katalogu frontendu:
+
+   ```bash
+   cd frontend
+   ```
+
+2. Edytuj plik `src/config/api.ts` i zaktualizuj adres URL API w zależności od środowiska:
+
+   **Dla iOS Simulator:**
+
+   ```typescript
+   return 'http://localhost:5226';
+   ```
+
+   **Dla Android Emulator:**
+
+   ```typescript
+   return 'http://10.0.2.2:5226';
+   ```
+
+   **Dla urządzenia fizycznego:**
+
+   ```typescript
+   // Zastąp adresem IP Twojego komputera
+   return 'http://192.168.1.100:5226';
+   ```
+
+   Aby znaleźć adres IP Twojego komputera:
+
+   - **macOS/Linux:** Użyj `ifconfig` lub `ip addr`
+   - **Windows:** Użyj `ipconfig`
+
+### Krok 4: Kompilacja Backendu (opcjonalne)
+
+```bash
+npm run build:backend
+```
+
+---
+
+## Uruchamianie projektu
+
+### Opcja 1: Uruchomienie obu serwerów jednocześnie (zalecane)
+
+Z głównego katalogu projektu:
+
+```bash
+npm run dev
+```
+
+To uruchomi:
+
+- Backend API na `http://localhost:5226` (lub `https://localhost:7286`)
+- Frontend Expo dev server z automatycznym otwarciem w przeglądarce (`--web`)
+
+### Opcja 2: Uruchomienie osobno
+
+**Tylko Backend:**
+
+```bash
+npm run dev:backend
+# lub
+cd backend/PowerPlanAPI && dotnet watch
+```
+
+**Tylko Frontend:**
+
+```bash
+npm run dev:frontend
+# lub
+cd frontend && npx expo start --web
+```
+
+### Dostępne skrypty
+
+| Polecenie                  | Opis                                                      |
+| -------------------------- | --------------------------------------------------------- |
+| `npm run setup`            | Instalacja wszystkich zależności (backend + frontend)     |
+| `npm run dev`              | Uruchomienie obu serwerów w trybie deweloperskim          |
+| `npm run dev:backend`      | Uruchomienie tylko backendu API                           |
+| `npm run dev:frontend`     | Uruchomienie tylko frontendu (z otwarciem w przeglądarce) |
+| `npm run build:backend`    | Kompilacja projektu backendu                              |
+| `npm run install:all`      | Instalacja zależności dla obu projektów                   |
+| `npm run install:backend`  | Instalacja zależności tylko dla backendu                  |
+| `npm run install:frontend` | Instalacja zależności tylko dla frontendu                 |
+
+---
+
+## Konfiguracja
+
+### Konfiguracja Backendu
+
+Pliki konfiguracyjne backendu znajdują się w:
+
+- `backend/PowerPlanAPI/appsettings.json` - Konfiguracja bazowa
+- `backend/PowerPlanAPI/appsettings.Development.json` - Nadpisania dla środowiska deweloperskiego
+
+**Wymagane ustawienia:**
+
+- `Jwt:Secret` - Klucz podpisywania JWT (minimum 32 znaki)
+- `Jwt:Issuer` - Nazwa wydawcy JWT
+- `Jwt:Audience` - Nazwa odbiorcy JWT
+- `ConnectionStrings:Postgres` - String połączenia z PostgreSQL
+
+### Konfiguracja Frontendu
+
+Konfiguracja API frontendu znajduje się w:
+
+- `frontend/src/config/api.ts`
+
+Zaktualizuj `API_BASE_URL` w zależności od środowiska deweloperskiego (patrz Krok 3 powyżej).
+
+### Konfiguracja CORS
+
+Backend jest skonfigurowany do akceptowania żądań z następujących źródeł:
+
+- `http://localhost:8081`
+- `http://localhost:19006`
+- `http://127.0.0.1:8081`
+- `http://127.0.0.1:19006`
+- `exp://localhost:8081`
+- `exp://127.0.0.1:8081`
+
+Jeśli potrzebujesz dodać więcej źródeł, edytuj `backend/PowerPlanAPI/Program.cs` i zaktualizuj politykę CORS.
+
+---
+
+## Rozwiązywanie problemów
+
+### Problemy z Backendem
+
+**Problem: "JWT Secret not configured"**
+
+- **Rozwiązanie:** Upewnij się, że plik `appsettings.Development.json` istnieje i zawiera prawidłowy `Jwt:Secret` (minimum 32 znaki)
+
+**Problem: Błędy połączenia z bazą danych**
+
+- **Rozwiązanie:**
+  - Sprawdź string połączenia PostgreSQL w `appsettings.Development.json`
+  - Upewnij się, że serwer bazy danych jest uruchomiony i dostępny
+
+**Problem: Port już w użyciu**
+
+- **Rozwiązanie:** Zmień port w `Properties/launchSettings.json` lub zatrzymaj proces używający portu
+
+### Problemy z Frontendem
+
+**Problem: "Network request failed" lub "Connection refused"**
+
+- **Rozwiązanie:**
+  - Sprawdź, czy backend działa na właściwym porcie
+  - Sprawdź adres URL API w `frontend/src/config/api.ts`
+  - Dla urządzeń fizycznych upewnij się, że używasz adresu IP komputera, a nie `localhost`
+
+**Problem: Błędy parsowania JSON "Unexpected token"**
+
+- **Rozwiązanie:** To zwykle oznacza, że backend zwrócił odpowiedź nie-JSON. Sprawdź:
+  - Czy backend działa i jest dostępny
+  - Czy CORS jest prawidłowo skonfigurowany
+  - Czy obsługa błędów backendu działa (powinna zwracać błędy w formacie JSON)
+
+**Problem: Problemy z Expo/metro bundler**
+
+- **Rozwiązanie:**
+  ```bash
+  cd frontend
+  npx expo start --clear
+  ```
+
+### Częste problemy
+
+**Problem: Zależności się nie instalują**
+
+- **Rozwiązanie:**
+  - Backend: Upewnij się, że .NET SDK 8.0+ jest zainstalowany
+  - Frontend: Upewnij się, że Node.js 18+ i pnpm 8+ są zainstalowane
+  - Spróbuj usunąć `node_modules` i zainstalować ponownie
+
+**Problem: Uwierzytelnianie nie działa**
+
+- **Rozwiązanie:**
+  - Sprawdź konfigurację JWT w backendzie
+  - Sprawdź, czy tokeny są przechowywane w AsyncStorage
+  - Sprawdź, czy adres URL API odpowiada Twojemu środowisku
 
 ---
 

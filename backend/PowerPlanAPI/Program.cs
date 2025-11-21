@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PowerPlanAPI.Data;
@@ -14,7 +16,40 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
 
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        // Ensure validation errors return JSON instead of HTML
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState
+                .Where(x => x.Value?.Errors.Count > 0)
+                .SelectMany(x => x.Value!.Errors)
+                .Select(x => x.ErrorMessage)
+                .ToList();
+
+            return new BadRequestObjectResult(new { error = string.Join(", ", errors) });
+        };
+    });
+
+// Add CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactNative", policy =>
+    {
+        policy.WithOrigins(
+                "http://localhost:8081",
+                "http://localhost:19006",
+                "http://127.0.0.1:8081",
+                "http://127.0.0.1:19006",
+                "exp://localhost:8081",
+                "exp://127.0.0.1:8081"
+              )
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var secret = builder.Configuration["Jwt:Secret"]
@@ -41,6 +76,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnMessageReceived = context =>
             {
+                // Try to get token from Authorization header first (for React Native)
+                var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+                if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
+                {
+                    context.Token = authHeader.Substring("Bearer ".Length).Trim();
+                    return Task.CompletedTask;
+                }
+                
+                // Fallback to cookie (for web)
                 if (context.Request.Cookies.ContainsKey("jwt_token"))
                 {
                     context.Token = context.Request.Cookies["jwt_token"];
@@ -55,6 +99,27 @@ builder.Services.AddAuthorization();
 var app = builder.Build();
 
 JwtHelper.Init(builder.Configuration);
+
+app.UseCors("AllowReactNative");
+
+// Global error handler to ensure JSON responses
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+        
+        var exception = context.Features.Get<IExceptionHandlerFeature>();
+        if (exception != null)
+        {
+            await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new
+            {
+                error = exception.Error.Message
+            }));
+        }
+    });
+});
 
 app.UseHttpsRedirection();
 app.UseAuthentication();

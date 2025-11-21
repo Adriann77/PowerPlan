@@ -9,7 +9,7 @@ type LoginScreenProps = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 export function LoginScreen({ navigation }: LoginScreenProps) {
   const { theme } = useTheme();
-  const { login, listUsers } = useAuth();
+  const { login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -49,18 +49,6 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
         }}
       >
         Login
-      </Text>
-      <Text
-        style={{
-          ...theme.typography.caption,
-          color: theme.palette.text.muted,
-          marginBottom: theme.spacing.lg,
-        }}
-      >
-        Demo accounts:{' '}
-        {listUsers()
-          .map((user) => `${user.username}/${user.username}`)
-          .join(', ')}
       </Text>
       <TextInput
         autoCapitalize='none'

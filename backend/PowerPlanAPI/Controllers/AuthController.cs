@@ -23,8 +23,8 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var result = await _authService.RegisterAsync(request, Response);
-            return Ok(new { message = "Registered successfully", user = result });
+            var (result, token) = await _authService.RegisterAsync(request, Response);
+            return Ok(new { message = "Registered successfully", user = result, token = token });
         }
         catch (InvalidOperationException ex)
         {
@@ -38,9 +38,9 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var user = await _authService.LoginAsync(request, Response);
+            var (user, token) = await _authService.LoginAsync(request, Response);
 
-            return Ok(new { message = "Logged in successfully", user });
+            return Ok(new { message = "Logged in successfully", user, token = token });
         }
         catch (UnauthorizedAccessException)
         {

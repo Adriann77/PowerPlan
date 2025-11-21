@@ -1,5 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { View, ActivityIndicator } from 'react-native';
 import { LoginScreen } from '../screens/LoginScreen';
 import { RegisterScreen } from '../screens/RegisterScreen';
 import { HomeScreen } from '../screens/HomeScreen';
@@ -9,6 +10,7 @@ import { ProgressScreen } from '../screens/ProgressScreen';
 import { WorkoutSessionScreen } from '../screens/WorkoutSessionScreen';
 import { DayExerciseScreen } from '../screens/DayExerciseScreen';
 import { useAuth } from '../providers/AuthProvider';
+import { useTheme } from '../theme';
 
 export type AuthStackParamList = {
   Login: undefined;
@@ -72,7 +74,27 @@ function MainTabs() {
 }
 
 export function RootNavigator() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+  const { theme } = useTheme();
+
+  // Show loading screen while checking authentication
+  if (isLoading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: theme.palette.background,
+        }}
+      >
+        <ActivityIndicator
+          size='large'
+          color={theme.palette.primary}
+        />
+      </View>
+    );
+  }
 
   return (
     <RootStack.Navigator screenOptions={{ headerShown: false }}>

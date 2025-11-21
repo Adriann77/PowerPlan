@@ -1,0 +1,38 @@
+{
+  "name": "powerplan",
+  "version": "1.0.0",
+  "description": "PowerPlan - Training plan management system",
+  "private": true,
+  "scripts": {
+    "install:all": "npm run install:backend && npm run install:frontend",
+    "install:backend": "cd backend/PowerPlanAPI && dotnet build",
+    "install:frontend": "cd frontend && pnpm install",
+    "build:backend": "cd backend/PowerPlanAPI && dotnet build",
+    "build:frontend": "cd frontend && pnpm run build",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend/PowerPlanAPI && dotnet watch",
+    "dev:frontend": "cd frontend && npx expo start --web",
+    "start": "npm run dev",
+    "setup": "npm run install:all"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Adriann77/PowerPlan"
+  },
+  "keywords": [
+    "react-native",
+    "dotnet",
+    "training",
+    "fitness",
+    "workout"
+  ],
+  "author": "PowerPlan Team",
+  "license": "MIT"
+}

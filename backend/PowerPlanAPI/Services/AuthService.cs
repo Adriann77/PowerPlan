@@ -13,7 +13,7 @@ public class AuthService : IAuthService
 
     public AuthService(AppDbContext db) => _db = db;
 
-    public async Task<RegisterResponse> RegisterAsync(RegisterRequest req, HttpResponse response)
+    public async Task<(RegisterResponse user, string token)> RegisterAsync(RegisterRequest req, HttpResponse response)
     {
         // 1. Lowercase username and check for existing
         var username = req.Username;
@@ -52,10 +52,10 @@ public class AuthService : IAuthService
         await _db.SaveChangesAsync();
 
         JwtHelper.SetJwtCookie(response, token);   
-        return new RegisterResponse(user.Id, user.Username);
+        return (new RegisterResponse(user.Id, user.Username), token);
     }
 
-    public async Task<UserDto> LoginAsync(LoginRequest req, HttpResponse response)
+    public async Task<(UserDto user, string token)> LoginAsync(LoginRequest req, HttpResponse response)
     {
         var username = req.Username;
         var username_lower = req.Username.Trim().ToLowerInvariant();
@@ -96,7 +96,7 @@ public class AuthService : IAuthService
         await _db.SaveChangesAsync();
 
         JwtHelper.SetJwtCookie(response, token);
-        return new UserDto(user.Id, user.Username);
+        return (new UserDto(user.Id, user.Username), token);
     }
 
     public async Task LogoutAsync(HttpResponse response, string token)

@@ -2,17 +2,15 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react';
-
-type AuthCredentials = {
-  username: string;
-  password: string;
-};
+import { apiClient } from '../services/api';
 
 type AuthUser = {
+  id: string;
   username: string;
 };
 
@@ -21,30 +19,27 @@ type AuthResult = { success: true } | { success: false; message: string };
 type AuthContextValue = {
   currentUser: AuthUser | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (username: string, password: string) => Promise<AuthResult>;
-  logout: () => void;
+  logout: () => Promise<void>;
   register: (username: string, password: string) => Promise<AuthResult>;
-  listUsers: () => AuthUser[];
+  checkAuth: () => Promise<void>;
 };
-
-const initialUsers: AuthCredentials[] = [
-  { username: 'test', password: 'test' },
-  { username: 'test1', password: 'test1' },
-];
 
 const AuthContext = createContext<AuthContextValue>({
   currentUser: null,
   isAuthenticated: false,
+  isLoading: true,
   login: async () => ({
     success: false,
     message: 'Auth provider not initialised',
   }),
-  logout: () => undefined,
+  logout: async () => undefined,
   register: async () => ({
     success: false,
     message: 'Auth provider not initialised',
   }),
-  listUsers: () => [],
+  checkAuth: async () => undefined,
 });
 
 type AuthProviderProps = {
@@ -52,88 +47,116 @@ type AuthProviderProps = {
 };
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [users, setUsers] = useState<AuthCredentials[]>(initialUsers);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const login = useCallback(
-    async (username: string, password: string) => {
-      const trimmedUsername = username.trim();
-      const trimmedPassword = password.trim();
-
-      if (!trimmedUsername || !trimmedPassword) {
-        return {
-          success: false,
-          message: 'Please enter both username and password.',
-        } as const;
+  // Check if user is already authenticated on mount
+  const checkAuth = useCallback(async () => {
+    try {
+      const isAuthenticated = await apiClient.checkAuth();
+      if (isAuthenticated) {
+        const userData = await apiClient.getCurrentUser();
+        setCurrentUser({
+          id: userData.userId,
+          username: userData.username,
+        });
+      } else {
+        setCurrentUser(null);
       }
+    } catch (error) {
+      console.error('Auth check error:', error);
+      setCurrentUser(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-      const matchedUser = users.find(
-        (user) =>
-          user.username.toLowerCase() === trimmedUsername.toLowerCase() &&
-          user.password === trimmedPassword,
-      );
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
-      if (!matchedUser) {
-        return {
-          success: false,
-          message: 'Invalid username or password.',
-        } as const;
-      }
+  const login = useCallback(async (username: string, password: string) => {
+    const trimmedUsername = username.trim();
+    const trimmedPassword = password.trim();
 
-      setCurrentUser({ username: matchedUser.username });
+    if (!trimmedUsername || !trimmedPassword) {
+      return {
+        success: false,
+        message: 'Please enter both username and password.',
+      } as const;
+    }
+
+    try {
+      const response = await apiClient.login(trimmedUsername, trimmedPassword);
+      setCurrentUser({
+        id: response.user.id,
+        username: response.user.username,
+      });
       return { success: true } as const;
-    },
-    [users],
-  );
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Login failed. Please try again.',
+      } as const;
+    }
+  }, []);
 
-  const register = useCallback(
-    async (username: string, password: string) => {
-      const trimmedUsername = username.trim();
-      const trimmedPassword = password.trim();
+  const register = useCallback(async (username: string, password: string) => {
+    const trimmedUsername = username.trim();
+    const trimmedPassword = password.trim();
 
-      if (!trimmedUsername || !trimmedPassword) {
-        return {
-          success: false,
-          message: 'Please choose both username and password.',
-        } as const;
-      }
+    if (!trimmedUsername || !trimmedPassword) {
+      return {
+        success: false,
+        message: 'Please choose both username and password.',
+      } as const;
+    }
 
-      const exists = users.some(
-        (user) => user.username.toLowerCase() === trimmedUsername.toLowerCase(),
+    try {
+      const response = await apiClient.register(
+        trimmedUsername,
+        trimmedPassword,
       );
-
-      if (exists) {
-        return {
-          success: false,
-          message: 'That username is already taken.',
-        } as const;
-      }
-
-      setUsers((prev) => [
-        ...prev,
-        { username: trimmedUsername, password: trimmedPassword },
-      ]);
-      setCurrentUser({ username: trimmedUsername });
-
+      setCurrentUser({
+        id: response.user.id,
+        username: response.user.username,
+      });
       return { success: true } as const;
-    },
-    [users],
-  );
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Registration failed. Please try again.',
+      } as const;
+    }
+  }, []);
 
-  const logout = useCallback(() => {
-    setCurrentUser(null);
+  const logout = useCallback(async () => {
+    try {
+      await apiClient.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setCurrentUser(null);
+    }
   }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       currentUser,
       isAuthenticated: Boolean(currentUser),
+      isLoading,
       login,
       logout,
       register,
-      listUsers: () => users.map(({ username }) => ({ username })),
+      checkAuth,
     }),
-    [currentUser, login, logout, register, users],
+    [currentUser, isLoading, login, logout, register, checkAuth],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

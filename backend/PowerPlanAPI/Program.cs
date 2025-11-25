@@ -9,13 +9,19 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ➤ SWAGGER CONFIG
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
+// ➤ DATABASE
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
 
+// ➤ SERVICES
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddControllers();
 
+// ➤ JWT CONFIG
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var secret = builder.Configuration["Jwt:Secret"]
              ?? jwtSettings["Secret"]
@@ -37,6 +43,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(key),
             ClockSkew = TimeSpan.Zero
         };
+
+        // cookie → token
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
@@ -54,18 +62,28 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+// ➤ SWAGGER UI – Development only (normalne dla wszystkich projektów)
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+// JWT helper init
 JwtHelper.Init(builder.Configuration);
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// ➤ ENDPOINTS
 app.MapGet("/", () => "PowerPlan API Works!");
 app.MapControllers();
 
 app.Run();
 
 
+// ➤ JWT HELPER
 public static class JwtHelper
 {
     private static IConfiguration Configuration { get; set; } = null!;
@@ -84,6 +102,7 @@ public static class JwtHelper
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var jwtSettings = Configuration.GetSection("Jwt");
+
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, userId),
@@ -106,7 +125,7 @@ public static class JwtHelper
         response.Cookies.Append("jwt_token", token, new CookieOptions
         {
             HttpOnly = true,
-            Secure = false,
+            Secure = false,   // dla localhost ok
             SameSite = SameSiteMode.Lax,
             Expires = DateTimeOffset.UtcNow.AddDays(30),
             Path = "/"

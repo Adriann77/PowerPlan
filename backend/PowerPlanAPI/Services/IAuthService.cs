@@ -5,7 +5,7 @@ namespace PowerPlanAPI.Services;
 
 public interface IAuthService
 {
-    Task<RegisterResponse> RegisterAsync(RegisterRequest request, HttpResponse response);
-    Task<UserDto> LoginAsync(LoginRequest request, HttpResponse response);
+    Task<(RegisterResponse user, string token)> RegisterAsync(RegisterRequest request, HttpResponse response);
+    Task<(UserDto user, string token)> LoginAsync(LoginRequest request, HttpResponse response);
     Task LogoutAsync(HttpResponse response, string token);
 }

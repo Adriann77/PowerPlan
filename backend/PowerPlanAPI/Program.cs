@@ -51,6 +51,8 @@ builder.Services.AddCors(options =>
     });
 });
 
+
+
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var secret = builder.Configuration["Jwt:Secret"]
              ?? jwtSettings["Secret"]

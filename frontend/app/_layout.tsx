@@ -2,10 +2,11 @@ import {
   NavigationContainer,
   NavigationIndependentTree,
 } from '@react-navigation/native';
-import '../src/theme/global.css';
+import './global.css';
 import { AppProvider } from '../src/providers/AppProvider';
 import { RootNavigator } from '../src/navigation';
 import { useTheme } from '../src/theme';
+import { Text } from 'react-native';
 
 function AppNavigation() {
   const { navigationTheme } = useTheme();

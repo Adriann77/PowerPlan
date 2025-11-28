@@ -110,6 +110,7 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
         }}
       >
         <Text
+        className=' '
           style={{
             ...theme.typography.heading3,
             color: submitting

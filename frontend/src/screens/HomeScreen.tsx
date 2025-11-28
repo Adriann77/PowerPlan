@@ -23,7 +23,7 @@ export function HomeScreen() {
           </TouchableOpacity>
         ) : null}
 
-        <Text className='text-gray-200 mb-4 text-base text-center'>
+        <Text className='text-gray-200 mb-10 text-base text-center'>
           Aktywny plan •{' '}
           {activePlan?.name ?? 'Brak przypisanego aktywnego planu'}
         </Text>
@@ -35,7 +35,7 @@ export function HomeScreen() {
           renderItem={({ item }) => (
             <TouchableOpacity
               onPress={() => router.push(`/day-exercise/${item.id}`)}
-              className='bg-slate-800 rounded-xl p-6'
+              className='bg-slate-800 rounded-xl p-4'
             >
               <Text className='text-xl font-bold text-white mb-2'>
                 {item.name}
@@ -45,10 +45,6 @@ export function HomeScreen() {
                   {item.description}
                 </Text>
               ) : null}
-              <Text className='text-gray-500 text-sm'>
-                {item.exercises.length} ćwiczeń • pierwsze ćwiczenie:{' '}
-                {item.exercises[0]?.name ?? 'TBD'}
-              </Text>
             </TouchableOpacity>
           )}
           ListEmptyComponent={

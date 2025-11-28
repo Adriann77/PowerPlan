@@ -5,100 +5,46 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import type { CompositeScreenProps } from '@react-navigation/native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { router } from 'expo-router';
 import { mockWorkoutState } from '../data/mockData';
-import type { MainTabParamList, RootStackParamList } from '../navigation';
-import { useTheme } from '../theme';
 
-type PlansScreenProps = CompositeScreenProps<
-  BottomTabScreenProps<MainTabParamList, 'Plans'>,
-  NativeStackScreenProps<RootStackParamList>
->;
-
-export function PlansScreen({ navigation }: PlansScreenProps) {
-  const { theme } = useTheme();
+export function PlansScreen() {
 
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-        backgroundColor: theme.palette.background,
-      }}
-    >
-      <View
-        style={{
-          flex: 1,
-          paddingHorizontal: theme.spacing.lg,
-          paddingTop: theme.spacing.md,
-        }}
-      >
-        <Text
-          style={{
-            ...theme.typography.heading1,
-            color: theme.palette.text.primary,
-            marginBottom: theme.spacing.lg,
-          }}
-        >
-          Workout Plans
+    <SafeAreaView className="flex-1 bg-slate-900">
+      <View className="flex-1 px-6 pt-4">
+        <Text className="text-3xl font-bold text-white mb-6">
+          Plany Treningowe
         </Text>
         <FlatList
           data={mockWorkoutState.plans}
           keyExtractor={(plan) => plan.id}
-          ItemSeparatorComponent={() => (
-            <View style={{ height: theme.spacing.md }} />
-          )}
+          ItemSeparatorComponent={() => <View className="h-4" />}
           renderItem={({ item }) => (
             <TouchableOpacity
               onPress={() => {
                 // Navigate to first training day of the plan
                 if (item.trainingDays.length > 0) {
-                  navigation.navigate('DayExercise', {
-                    trainingDayId: item.trainingDays[0].id,
-                  });
+                  router.push(`/day-exercise/${item.trainingDays[0].id}`);
                 }
               }}
-              style={{
-                borderRadius: theme.radii.lg,
-                padding: theme.spacing.lg,
-                backgroundColor: item.isActive
-                  ? theme.palette.surfaceElevated
-                  : theme.palette.surface,
-                borderWidth: 1,
-                borderColor: item.isActive
-                  ? theme.palette.primary
-                  : theme.palette.border,
-              }}
+              className={`rounded-xl p-6 border ${
+                item.isActive
+                  ? 'bg-slate-700 border-purple-500'
+                  : 'bg-slate-800 border-gray-600'
+              }`}
             >
-              <Text
-                style={{
-                  ...theme.typography.heading2,
-                  color: theme.palette.text.primary,
-                  marginBottom: theme.spacing.sm,
-                }}
-              >
+              <Text className="text-xl font-bold text-white mb-2">
                 {item.name}
               </Text>
               {item.description ? (
-                <Text
-                  style={{
-                    ...theme.typography.body,
-                    color: theme.palette.text.secondary,
-                    marginBottom: theme.spacing.sm,
-                  }}
-                >
+                <Text className="text-gray-400 mb-2 text-base">
                   {item.description}
                 </Text>
               ) : null}
-              <Text
-                style={{
-                  ...theme.typography.caption,
-                  color: theme.palette.text.muted,
-                }}
-              >
-                {item.trainingDays.length} training days • {item.weekDuration}
-                -week block
+              <Text className="text-gray-500 text-sm">
+                {item.trainingDays.length} dni treningowych • {item.weekDuration}
+                -tygodniowy blok
               </Text>
             </TouchableOpacity>
           )}

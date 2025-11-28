@@ -6,23 +6,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useLocalSearchParams, router } from 'expo-router';
 import { mockWorkoutState } from '../data/mockData';
-import type { RootStackParamList } from '../navigation';
 import type { TrainingDay } from '../types/workout';
-import { useTheme } from '../theme';
 
-type DayExerciseScreenProps = NativeStackScreenProps<
-  RootStackParamList,
-  'DayExercise'
->;
-
-export function DayExerciseScreen({
-  navigation,
-  route,
-}: DayExerciseScreenProps) {
-  const { theme } = useTheme();
-  const { trainingDayId } = route.params;
+export function DayExerciseScreen() {
+  const { trainingDayId } = useLocalSearchParams<{ trainingDayId: string }>();
 
   const trainingDay = useMemo<TrainingDay | undefined>(() => {
     for (const plan of mockWorkoutState.plans) {
@@ -34,45 +23,17 @@ export function DayExerciseScreen({
 
   if (!trainingDay) {
     return (
-      <SafeAreaView
-        style={{
-          flex: 1,
-          backgroundColor: theme.palette.background,
-        }}
-      >
-        <View
-          style={{
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: theme.spacing.xl,
-          }}
-        >
-          <Text
-            style={{
-              ...theme.typography.heading2,
-              color: theme.palette.text.primary,
-              marginBottom: theme.spacing.md,
-            }}
-          >
-            Training Day Not Found
+      <SafeAreaView className="flex-1 bg-slate-900">
+        <View className="flex-1 justify-center items-center px-6">
+          <Text className="text-2xl font-bold text-white mb-4">
+            Dzień Treningowy Nie Został Znaleziony
           </Text>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
-            style={{
-              backgroundColor: theme.palette.primary,
-              borderRadius: theme.radii.md,
-              paddingHorizontal: theme.spacing.lg,
-              paddingVertical: theme.spacing.md,
-            }}
+            className="bg-purple-600 rounded-lg px-6 py-3"
           >
-            <Text
-              style={{
-                ...theme.typography.button,
-                color: theme.palette.background,
-              }}
-            >
-              Go Back
+            <Text className="text-white font-semibold">
+              Wróć
             </Text>
           </TouchableOpacity>
         </View>
@@ -81,55 +42,23 @@ export function DayExerciseScreen({
   }
 
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-        backgroundColor: theme.palette.background,
-      }}
-    >
-      <View style={{ flex: 1 }}>
+    <SafeAreaView className="flex-1 bg-slate-900">
+      <View className="flex-1">
         {/* Header */}
-        <View
-          style={{
-            paddingHorizontal: theme.spacing.lg,
-            paddingTop: theme.spacing.md,
-            paddingBottom: theme.spacing.lg,
-            borderBottomWidth: 1,
-            borderBottomColor: theme.palette.border,
-          }}
-        >
+        <View className="px-6 pt-4 pb-6 border-b border-gray-600">
           <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={{
-              alignSelf: 'flex-start',
-              marginBottom: theme.spacing.md,
-            }}
+            onPress={() => router.back()}
+            className="self-start mb-4"
           >
-            <Text
-              style={{
-                ...theme.typography.body,
-                color: theme.palette.primary,
-              }}
-            >
-              ← Back
+            <Text className="text-purple-400 text-base">
+              ← Wróć
             </Text>
           </TouchableOpacity>
-          <Text
-            style={{
-              ...theme.typography.heading1,
-              color: theme.palette.text.primary,
-              marginBottom: theme.spacing.sm,
-            }}
-          >
+          <Text className="text-3xl font-bold text-white mb-2">
             {trainingDay.name}
           </Text>
           {trainingDay.description ? (
-            <Text
-              style={{
-                ...theme.typography.body,
-                color: theme.palette.text.secondary,
-              }}
-            >
+            <Text className="text-gray-400 text-base">
               {trainingDay.description}
             </Text>
           ) : null}
@@ -139,149 +68,57 @@ export function DayExerciseScreen({
         <FlatList
           data={trainingDay.exercises}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{
-            padding: theme.spacing.lg,
-          }}
+          contentContainerStyle={{ padding: 24 }}
           ItemSeparatorComponent={() => (
-            <View style={{ height: theme.spacing.md }} />
+            <View className="h-4" />
           )}
           renderItem={({ item, index }) => (
-            <View
-              style={{
-                backgroundColor: theme.palette.surface,
-                borderRadius: theme.radii.lg,
-                padding: theme.spacing.lg,
-                borderWidth: 1,
-                borderColor: theme.palette.border,
-              }}
-            >
+            <View className="bg-slate-800 rounded-xl p-6 border border-gray-600">
               {/* Exercise Header */}
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'flex-start',
-                  marginBottom: theme.spacing.md,
-                }}
-              >
-                <View
-                  style={{
-                    backgroundColor: theme.palette.primary,
-                    width: 32,
-                    height: 32,
-                    borderRadius: theme.radii.full,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    marginRight: theme.spacing.md,
-                  }}
-                >
-                  <Text
-                    style={{
-                      ...theme.typography.button,
-                      color: theme.palette.background,
-                      fontSize: 14,
-                    }}
-                  >
+              <View className="flex-row items-start mb-4">
+                <View className="bg-purple-600 w-8 h-8 rounded-full justify-center items-center mr-4">
+                  <Text className="text-slate-900 font-semibold text-sm">
                     {item.orderNumber}
                   </Text>
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      ...theme.typography.heading2,
-                      color: theme.palette.text.primary,
-                      marginBottom: theme.spacing.xs,
-                    }}
-                  >
+                <View className="flex-1">
+                  <Text className="text-xl font-bold text-white mb-1">
                     {item.name}
                   </Text>
                 </View>
               </View>
 
               {/* Exercise Details Grid */}
-              <View
-                style={{
-                  flexDirection: 'row',
-                  flexWrap: 'wrap',
-                  marginBottom: item.notes ? theme.spacing.md : 0,
-                }}
-              >
-                <View style={{ width: '50%', marginBottom: theme.spacing.sm }}>
-                  <Text
-                    style={{
-                      ...theme.typography.caption,
-                      color: theme.palette.text.muted,
-                      marginBottom: theme.spacing.xs,
-                    }}
-                  >
-                    Sets
+              <View className={`flex-row flex-wrap ${item.notes ? 'mb-4' : ''}`}>
+                <View className="w-1/2 mb-2">
+                  <Text className="text-gray-400 text-sm mb-1">
+                    Serie
                   </Text>
-                  <Text
-                    style={{
-                      ...theme.typography.body,
-                      color: theme.palette.text.primary,
-                      fontWeight: '600' as const,
-                    }}
-                  >
+                  <Text className="text-white font-semibold text-base">
                     {item.sets}
                   </Text>
                 </View>
-                <View style={{ width: '50%', marginBottom: theme.spacing.sm }}>
-                  <Text
-                    style={{
-                      ...theme.typography.caption,
-                      color: theme.palette.text.muted,
-                      marginBottom: theme.spacing.xs,
-                    }}
-                  >
-                    Reps
+                <View className="w-1/2 mb-2">
+                  <Text className="text-gray-400 text-sm mb-1">
+                    Powtórzenia
                   </Text>
-                  <Text
-                    style={{
-                      ...theme.typography.body,
-                      color: theme.palette.text.primary,
-                      fontWeight: '600' as const,
-                    }}
-                  >
+                  <Text className="text-white font-semibold text-base">
                     {item.reps}
                   </Text>
                 </View>
-                <View style={{ width: '50%', marginBottom: theme.spacing.sm }}>
-                  <Text
-                    style={{
-                      ...theme.typography.caption,
-                      color: theme.palette.text.muted,
-                      marginBottom: theme.spacing.xs,
-                    }}
-                  >
+                <View className="w-1/2 mb-2">
+                  <Text className="text-gray-400 text-sm mb-1">
                     Tempo
                   </Text>
-                  <Text
-                    style={{
-                      ...theme.typography.body,
-                      color: theme.palette.text.primary,
-                      fontWeight: '600' as const,
-                    }}
-                  >
+                  <Text className="text-white font-semibold text-base">
                     {item.tempo}
                   </Text>
                 </View>
-                <View style={{ width: '50%', marginBottom: theme.spacing.sm }}>
-                  <Text
-                    style={{
-                      ...theme.typography.caption,
-                      color: theme.palette.text.muted,
-                      marginBottom: theme.spacing.xs,
-                    }}
-                  >
-                    Rest
+                <View className="w-1/2 mb-2">
+                  <Text className="text-gray-400 text-sm mb-1">
+                    Odpoczynek
                   </Text>
-                  <Text
-                    style={{
-                      ...theme.typography.body,
-                      color: theme.palette.text.primary,
-                      fontWeight: '600' as const,
-                    }}
-                  >
+                  <Text className="text-white font-semibold text-base">
                     {item.restSeconds}s
                   </Text>
                 </View>
@@ -289,28 +126,11 @@ export function DayExerciseScreen({
 
               {/* Notes */}
               {item.notes ? (
-                <View
-                  style={{
-                    backgroundColor: theme.palette.background,
-                    borderRadius: theme.radii.md,
-                    padding: theme.spacing.md,
-                  }}
-                >
-                  <Text
-                    style={{
-                      ...theme.typography.caption,
-                      color: theme.palette.text.muted,
-                      marginBottom: theme.spacing.xs,
-                    }}
-                  >
-                    Notes
+                <View className="bg-slate-700 rounded-lg p-4">
+                  <Text className="text-gray-400 text-sm mb-1">
+                    Notatki
                   </Text>
-                  <Text
-                    style={{
-                      ...theme.typography.body,
-                      color: theme.palette.text.secondary,
-                    }}
-                  >
+                  <Text className="text-gray-300 text-base">
                     {item.notes}
                   </Text>
                 </View>
@@ -320,23 +140,12 @@ export function DayExerciseScreen({
           ListFooterComponent={() => (
             <TouchableOpacity
               onPress={() =>
-                navigation.navigate('WorkoutSession', { trainingDayId })
+                router.push(`/workout-session/${trainingDayId}`)
               }
-              style={{
-                backgroundColor: theme.palette.primary,
-                borderRadius: theme.radii.lg,
-                padding: theme.spacing.lg,
-                marginTop: theme.spacing.md,
-                alignItems: 'center',
-              }}
+              className="bg-purple-600 rounded-xl p-6 mt-4 items-center"
             >
-              <Text
-                style={{
-                  ...theme.typography.button,
-                  color: theme.palette.background,
-                }}
-              >
-                Start Workout
+              <Text className="text-white font-semibold text-lg">
+                Rozpocznij Trening
               </Text>
             </TouchableOpacity>
           )}

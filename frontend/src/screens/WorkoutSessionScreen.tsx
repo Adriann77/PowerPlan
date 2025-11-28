@@ -37,6 +37,46 @@ export function WorkoutSessionScreen() {
       muted: '#6b7280',
     },
     border: '#374151',
+    palette: {
+      background: '#0f0d24',
+      surface: '#1a1a2e',
+      surfaceMuted: '#2a2a3e',
+      primary: '#AB8BFF',
+      success: '#10b981',
+      warning: '#f59e0b',
+      text: {
+        primary: '#ffffff',
+        secondary: '#9ca4ab',
+        muted: '#6b7280',
+      },
+      border: '#374151',
+    },
+    typography: {
+      heading1: {
+        fontSize: 24,
+        fontWeight: 'bold',
+      },
+      heading2: {
+        fontSize: 20,
+        fontWeight: '600',
+      },
+      heading3: {
+        fontSize: 18,
+        fontWeight: '600',
+      },
+      body: {
+        fontSize: 16,
+        fontWeight: 'normal',
+      },
+      button: {
+        fontSize: 16,
+        fontWeight: '600',
+      },
+      caption: {
+        fontSize: 14,
+        fontWeight: 'normal',
+      },
+    },
     spacing: {
       xs: 4,
       sm: 8,
@@ -181,45 +221,47 @@ export function WorkoutSessionScreen() {
     <SafeAreaView
         style={{ flex: 1, backgroundColor: themeColors.background }}
     >
-      <ScrollView style={{ flex: 1 }}>
-        {/* Header */}
-        <View
+      {/* Fixed Header */}
+      <View
+        style={{
+          paddingHorizontal: themeColors.spacing.lg,
+          paddingTop: themeColors.spacing.md,
+          paddingBottom: themeColors.spacing.lg,
+          borderBottomWidth: 1,
+          borderBottomColor: themeColors.palette.border,
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{ alignSelf: 'flex-start', marginBottom: themeColors.spacing.md }}
+        >
+          <Text
+            style={{ ...themeColors.typography.body, color: themeColors.palette.primary }}
+          >
+            ← Wróć
+          </Text>
+        </TouchableOpacity>
+        <Text
           style={{
-            paddingHorizontal: themeColors.spacing.lg,
-            paddingTop: themeColors.spacing.md,
-            paddingBottom: themeColors.spacing.lg,
-            borderBottomWidth: 1,
-            borderBottomColor: themeColors.palette.border,
+            ...themeColors.typography.heading1,
+            color: themeColors.palette.text.primary,
+            marginBottom: themeColors.spacing.xs,
           }}
         >
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={{ alignSelf: 'flex-start', marginBottom: themeColors.spacing.md }}
-          >
-            <Text
-              style={{ ...themeColors.typography.body, color: themeColors.palette.primary }}
-            >
-              ← Wróć
-            </Text>
-          </TouchableOpacity>
-          <Text
-            style={{
-              ...themeColors.typography.heading1,
-              color: themeColors.palette.text.primary,
-              marginBottom: themeColors.spacing.xs,
-            }}
-          >
-            {trainingDay.name}
-          </Text>
-          <Text
-            style={{
-              ...themeColors.typography.caption,
-              color: themeColors.palette.text.muted,
-            }}
-          >
-            Ćwiczenie {currentExerciseIndex + 1} z {totalExercises}
-          </Text>
-        </View>
+          {trainingDay.name}
+        </Text>
+        <Text
+          style={{
+            ...themeColors.typography.caption,
+            color: themeColors.palette.text.muted,
+          }}
+        >
+          Ćwiczenie {currentExerciseIndex + 1} z {totalExercises}
+        </Text>
+      </View>
+
+      {/* Scrollable Exercise Content */}
+      <ScrollView style={{ flex: 1 }}>
 
         {/* Exercise Info */}
         <View style={{ padding: themeColors.spacing.lg }}>
@@ -651,15 +693,124 @@ export function WorkoutSessionScreen() {
                 ← Poprzednie
               </Text>
             </TouchableOpacity>
+            {currentExerciseIndex === totalExercises - 1 ? (
+              <TouchableOpacity
+                onPress={saveWorkout}
+                style={{
+                  flex: 1,
+                  backgroundColor: themeColors.palette.success,
+                  borderRadius: themeColors.radii.md,
+                  padding: themeColors.spacing.md,
+                  alignItems: 'center',
+                }}
+              >
+                <Text
+                  style={{
+                    ...themeColors.typography.button,
+                    color: themeColors.palette.background,
+                    fontSize: 16,
+                  }}
+                >
+                  Zapisz trening
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={goToNextExercise}
+                style={{
+                  flex: 1,
+                  backgroundColor: themeColors.palette.surface,
+                  borderRadius: themeColors.radii.md,
+                  padding: themeColors.spacing.md,
+                  alignItems: 'center',
+                  borderWidth: 1,
+                  borderColor: themeColors.palette.border,
+                }}
+              >
+                <Text
+                  style={{
+                    ...themeColors.typography.button,
+                    color: themeColors.palette.text.primary,
+                  }}
+                >
+                  Następne →
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Fixed Navigation Buttons */}
+      <View
+        style={{
+          padding: themeColors.spacing.lg,
+          borderTopWidth: 1,
+          borderTopColor: themeColors.palette.border,
+          backgroundColor: themeColors.background,
+        }}
+      >
+        <View
+          style={{
+            flexDirection: 'row',
+            gap: themeColors.spacing.md,
+          }}
+        >
+          <TouchableOpacity
+            onPress={goToPreviousExercise}
+            disabled={currentExerciseIndex === 0}
+            style={{
+              flex: 1,
+              backgroundColor:
+                currentExerciseIndex === 0
+                  ? themeColors.palette.surfaceMuted
+                  : themeColors.palette.surface,
+              borderRadius: themeColors.radii.md,
+              padding: themeColors.spacing.md,
+              alignItems: 'center',
+              borderWidth: 1,
+              borderColor: themeColors.palette.border,
+            }}
+          >
+            <Text
+              style={{
+                ...themeColors.typography.button,
+                color:
+                  currentExerciseIndex === 0
+                    ? themeColors.palette.text.muted
+                    : themeColors.palette.text.primary,
+              }}
+            >
+              ← Poprzednie
+            </Text>
+          </TouchableOpacity>
+          {currentExerciseIndex === totalExercises - 1 ? (
             <TouchableOpacity
-              onPress={goToNextExercise}
-              disabled={currentExerciseIndex === totalExercises - 1}
+              onPress={saveWorkout}
               style={{
                 flex: 1,
-                backgroundColor:
-                  currentExerciseIndex === totalExercises - 1
-                    ? themeColors.palette.surfaceMuted
-                    : themeColors.palette.surface,
+                backgroundColor: themeColors.palette.success,
+                borderRadius: themeColors.radii.md,
+                padding: themeColors.spacing.md,
+                alignItems: 'center',
+              }}
+            >
+              <Text
+                style={{
+                  ...themeColors.typography.button,
+                  color: themeColors.palette.background,
+                  fontSize: 16,
+                }}
+              >
+                Zapisz trening
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={goToNextExercise}
+              style={{
+                flex: 1,
+                backgroundColor: themeColors.palette.surface,
                 borderRadius: themeColors.radii.md,
                 padding: themeColors.spacing.md,
                 alignItems: 'center',
@@ -670,39 +821,15 @@ export function WorkoutSessionScreen() {
               <Text
                 style={{
                   ...themeColors.typography.button,
-                  color:
-                    currentExerciseIndex === totalExercises - 1
-                      ? themeColors.palette.text.muted
-                      : themeColors.palette.text.primary,
+                  color: themeColors.palette.text.primary,
                 }}
               >
                 Następne →
               </Text>
             </TouchableOpacity>
-          </View>
-
-          {/* Save Workout Button */}
-          <TouchableOpacity
-            onPress={saveWorkout}
-            style={{
-              backgroundColor: themeColors.palette.success,
-              borderRadius: themeColors.radii.lg,
-              padding: themeColors.spacing.lg,
-              alignItems: 'center',
-            }}
-          >
-            <Text
-              style={{
-                ...themeColors.typography.button,
-                color: themeColors.palette.background,
-                fontSize: 18,
-              }}
-            >
-              Zapisz trening
-            </Text>
-          </TouchableOpacity>
+          )}
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }

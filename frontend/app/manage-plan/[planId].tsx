@@ -110,23 +110,7 @@ export default function ManagePlanScreen() {
   };
 
   const goBackToPlans = () => {
-    Alert.alert('Zapisać plan?', 'Czy chcesz zapisać ten plan treningowy?', [
-      { text: 'Anuluj', style: 'cancel' },
-      {
-        text: 'Nie zapisuj',
-        style: 'destructive',
-        onPress: () => router.push('/plans'),
-      },
-      {
-        text: 'Zapisz',
-        onPress: () => {
-          // Here we would save to backend, for now just navigate back
-          Alert.alert('Sukces', 'Plan został zapisany!', [
-            { text: 'OK', onPress: () => router.push('/plans') },
-          ]);
-        },
-      },
-    ]);
+    router.push('/plans');
   };
 
   return (
@@ -143,7 +127,6 @@ export default function ManagePlanScreen() {
           <Text className='text-3xl font-bold text-white mb-2'>
             Zarządzaj Planem
           </Text>
-          <Text className='text-gray-400'>Plan ID: {planId}</Text>
         </View>
 
         {/* Content */}

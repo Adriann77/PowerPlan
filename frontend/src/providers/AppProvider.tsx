@@ -1,4 +1,3 @@
-import { ThemeProvider } from '../theme';
 import { AuthProvider } from './AuthProvider';
 
 type AppProviderProps = {
@@ -7,9 +6,7 @@ type AppProviderProps = {
 
 export function AppProvider({ children }: AppProviderProps) {
   return (
-    <ThemeProvider>
-      <AuthProvider>{children}</AuthProvider>
-    </ThemeProvider>
+    <AuthProvider>{children}</AuthProvider>
   );
 }
 

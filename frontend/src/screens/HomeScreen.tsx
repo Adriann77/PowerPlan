@@ -1,149 +1,56 @@
 import { useMemo } from 'react';
-import {
-  FlatList,
-  SafeAreaView,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import type { CompositeScreenProps } from '@react-navigation/native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { getActivePlan, mockWorkoutState } from '../data/mockData';
-import type { MainTabParamList, RootStackParamList } from '../navigation';
+import { FlatList, Text, TouchableOpacity, View } from 'react-native';
+import { router } from 'expo-router';
+import { getActivePlan } from '../data/mockData';
 import { useAuth } from '../providers/AuthProvider';
-import { useTheme } from '../theme';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-type HomeScreenProps = CompositeScreenProps<
-  BottomTabScreenProps<MainTabParamList, 'Home'>,
-  NativeStackScreenProps<RootStackParamList>
->;
-
-export function HomeScreen({ navigation }: HomeScreenProps) {
-  const { theme } = useTheme();
+export function HomeScreen() {
   const activePlan = useMemo(() => getActivePlan(), []);
   const { currentUser, logout } = useAuth();
 
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-        backgroundColor: theme.palette.background,
-      }}
-    >
-      <View
-        style={{
-          flex: 1,
-          paddingHorizontal: theme.spacing.lg,
-          paddingTop: theme.spacing.md,
-        }}
-      >
-        <Text
-          style={{
-            ...theme.typography.heading1,
-            color: theme.palette.text.primary,
-            marginBottom: theme.spacing.md,
-          }}
-        >
-          Welcome back,{' '}
-          {currentUser?.username ?? mockWorkoutState.user.username}
-        </Text>
+    <SafeAreaView className='flex-1 bg-slate-900'>
+      <View className='flex-1 px-6 pt-4'>
         {currentUser ? (
           <TouchableOpacity
             onPress={logout}
-            style={{
-              alignSelf: 'flex-start',
-              backgroundColor: theme.palette.surface,
-              borderRadius: theme.radii.md,
-              paddingHorizontal: theme.spacing.md,
-              paddingVertical: theme.spacing.sm,
-              marginBottom: theme.spacing.lg,
-            }}
+            className='self-start bg-slate-800 rounded-lg px-4 py-2 mb-6'
           >
-            <Text
-              style={{
-                ...theme.typography.caption,
-                color: theme.palette.primary,
-              }}
-            >
-              Sign out
+            <Text className='text-purple-400 text-sm font-medium'>
+              Wyloguj się
             </Text>
           </TouchableOpacity>
         ) : null}
 
-        <Text
-          style={{
-            ...theme.typography.body,
-            color: theme.palette.text.secondary,
-            marginBottom: theme.spacing.lg,
-          }}
-        >
-          Active plan • {activePlan?.name ?? 'No active plan assigned'}
+        <Text className='text-gray-200 mb-10 text-base text-center'>
+          Aktywny plan •{' '}
+          {activePlan?.name ?? 'Brak przypisanego aktywnego planu'}
         </Text>
 
         <FlatList
-          ItemSeparatorComponent={() => (
-            <View style={{ height: theme.spacing.md }} />
-          )}
+          ItemSeparatorComponent={() => <View className='h-4' />}
           data={activePlan?.trainingDays ?? []}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('DayExercise', { trainingDayId: item.id })
-              }
-              style={{
-                backgroundColor: theme.palette.surface,
-                borderRadius: theme.radii.lg,
-                padding: theme.spacing.lg,
-              }}
+              onPress={() => router.push(`/day-exercise/${item.id}`)}
+              className='bg-slate-800 rounded-xl p-4'
             >
-              <Text
-                style={{
-                  ...theme.typography.heading2,
-                  color: theme.palette.text.primary,
-                  marginBottom: theme.spacing.sm,
-                }}
-              >
+              <Text className='text-xl font-bold text-white mb-2'>
                 {item.name}
               </Text>
               {item.description ? (
-                <Text
-                  style={{
-                    ...theme.typography.body,
-                    color: theme.palette.text.secondary,
-                    marginBottom: theme.spacing.md,
-                  }}
-                >
+                <Text className='text-gray-400 mb-4 text-base'>
                   {item.description}
                 </Text>
               ) : null}
-              <Text
-                style={{
-                  ...theme.typography.caption,
-                  color: theme.palette.text.muted,
-                }}
-              >
-                {item.exercises.length} exercises • first move:{' '}
-                {item.exercises[0]?.name ?? 'TBD'}
-              </Text>
             </TouchableOpacity>
           )}
           ListEmptyComponent={
-            <View
-              style={{
-                backgroundColor: theme.palette.surface,
-                borderRadius: theme.radii.lg,
-                padding: theme.spacing.lg,
-              }}
-            >
-              <Text
-                style={{
-                  ...theme.typography.body,
-                  color: theme.palette.text.secondary,
-                }}
-              >
-                Training days will appear here once plans are configured.
+            <View className='bg-slate-800 rounded-xl p-6'>
+              <Text className='text-gray-400 text-base'>
+                Dni treningowe pojawią się tutaj po skonfigurowaniu planów.
               </Text>
             </View>
           }

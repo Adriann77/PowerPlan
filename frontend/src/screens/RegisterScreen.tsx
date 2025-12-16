@@ -1,15 +1,8 @@
 import { useState } from 'react';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
-import type { AuthStackParamList } from '../navigation';
+import { router } from 'expo-router';
 import { useAuth } from '../providers/AuthProvider';
-import { useTheme } from '../theme';
-
-type RegisterScreenProps = NativeStackScreenProps<
-  AuthStackParamList,
-  'Register'
->;
 
 type RegisterFormData = {
   username: string;
@@ -17,8 +10,7 @@ type RegisterFormData = {
   confirmPassword: string;
 };
 
-export function RegisterScreen({ navigation }: RegisterScreenProps) {
-  const { theme } = useTheme();
+export function RegisterScreen() {
   const { register: registerUser } = useAuth();
   const [apiError, setApiError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -56,22 +48,9 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
   };
 
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: 'center',
-        paddingHorizontal: theme.spacing.xl,
-        backgroundColor: theme.palette.background,
-      }}
-    >
-      <Text
-        style={{
-          ...theme.typography.heading1,
-          color: theme.palette.text.primary,
-          marginBottom: theme.spacing.md,
-        }}
-      >
-        Create account
+    <View className='flex-1 justify-center px-6 bg-slate-900'>
+      <Text className='text-3xl font-bold text-white mb-4'>
+        Utwórz konto
       </Text>
       <Controller
         control={control}
@@ -88,31 +67,17 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
             <TextInput
               autoCapitalize='none'
               autoCorrect={false}
-              placeholder='Choose a username (min 5 characters)'
-              placeholderTextColor={theme.palette.text.muted}
+              placeholder='Wybierz nazwę użytkownika (min 5 znaków)'
+              placeholderTextColor='#9ca4ab'
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
-              style={{
-                borderWidth: 1,
-                borderColor: errors.username
-                  ? theme.palette.danger
-                  : theme.palette.border,
-                borderRadius: theme.radii.md,
-                paddingHorizontal: theme.spacing.md,
-                paddingVertical: theme.spacing.sm,
-                color: theme.palette.text.primary,
-                marginBottom: theme.spacing.xs,
-              }}
+              className={`border rounded-lg px-4 py-3 text-white mb-1 bg-slate-800 ${
+                errors.username ? 'border-red-500' : 'border-gray-600'
+              }`}
             />
             {errors.username && (
-              <Text
-                style={{
-                  ...theme.typography.caption,
-                  color: theme.palette.danger,
-                  marginBottom: theme.spacing.md,
-                }}
-              >
+              <Text className='text-red-400 mb-4 text-sm'>
                 {errors.username.message}
               </Text>
             )}
@@ -141,32 +106,18 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
             <TextInput
               autoCapitalize='none'
               autoCorrect={false}
-              placeholder='Choose a password (min 5 chars, 1 number)'
-              placeholderTextColor={theme.palette.text.muted}
+              placeholder='Wybierz hasło (min 5 znaków, 1 cyfra)'
+              placeholderTextColor='#9ca4ab'
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
               secureTextEntry
-              style={{
-                borderWidth: 1,
-                borderColor: errors.password
-                  ? theme.palette.danger
-                  : theme.palette.border,
-                borderRadius: theme.radii.md,
-                paddingHorizontal: theme.spacing.md,
-                paddingVertical: theme.spacing.sm,
-                color: theme.palette.text.primary,
-                marginBottom: theme.spacing.xs,
-              }}
+              className={`border rounded-lg px-4 py-3 text-white mb-1 bg-slate-800 ${
+                errors.password ? 'border-red-500' : 'border-gray-600'
+              }`}
             />
             {errors.password && (
-              <Text
-                style={{
-                  ...theme.typography.caption,
-                  color: theme.palette.danger,
-                  marginBottom: theme.spacing.md,
-                }}
-              >
+              <Text className='text-red-400 mb-4 text-sm'>
                 {errors.password.message}
               </Text>
             )}
@@ -191,32 +142,18 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
             <TextInput
               autoCapitalize='none'
               autoCorrect={false}
-              placeholder='Confirm password'
-              placeholderTextColor={theme.palette.text.muted}
+              placeholder='Potwierdź hasło'
+              placeholderTextColor='#9ca4ab'
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
               secureTextEntry
-              style={{
-                borderWidth: 1,
-                borderColor: errors.confirmPassword
-                  ? theme.palette.danger
-                  : theme.palette.border,
-                borderRadius: theme.radii.md,
-                paddingHorizontal: theme.spacing.md,
-                paddingVertical: theme.spacing.sm,
-                color: theme.palette.text.primary,
-                marginBottom: theme.spacing.xs,
-              }}
+              className={`border rounded-lg px-4 py-3 text-white mb-1 bg-slate-800 ${
+                errors.confirmPassword ? 'border-red-500' : 'border-gray-600'
+              }`}
             />
             {errors.confirmPassword && (
-              <Text
-                style={{
-                  ...theme.typography.caption,
-                  color: theme.palette.danger,
-                  marginBottom: theme.spacing.md,
-                }}
-              >
+              <Text className='text-red-400 mb-4 text-sm'>
                 {errors.confirmPassword.message}
               </Text>
             )}
@@ -225,13 +162,7 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
       />
 
       {apiError && (
-        <Text
-          style={{
-            ...theme.typography.caption,
-            color: theme.palette.danger,
-            marginBottom: theme.spacing.md,
-          }}
-        >
+        <Text className='text-red-400 mb-4 text-sm'>
           {apiError}
         </Text>
       )}
@@ -239,37 +170,17 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
       <TouchableOpacity
         onPress={handleSubmit(onSubmit)}
         disabled={submitting}
-        style={{
-          backgroundColor: submitting
-            ? theme.palette.surfaceMuted
-            : theme.palette.primary,
-          paddingVertical: theme.spacing.md,
-          borderRadius: theme.radii.md,
-          marginBottom: theme.spacing.lg,
-          opacity: submitting ? 0.7 : 1,
-        }}
+        className={`py-3 rounded-lg mb-6 ${submitting ? 'bg-gray-600 opacity-70' : 'bg-purple-600'}`}
       >
-        <Text
-          style={{
-            ...theme.typography.heading3,
-            color: submitting
-              ? theme.palette.text.secondary
-              : theme.palette.text.inverse,
-            textAlign: 'center',
-          }}
-        >
-          {submitting ? 'Creating account…' : 'Create account'}
+        <Text className={`text-center font-semibold ${submitting ? 'text-gray-300' : 'text-white'}`}>
+          {submitting ? 'Tworzenie konta…' : 'Utwórz konto'}
         </Text>
       </TouchableOpacity>
-      <Text
-        style={{
-          ...theme.typography.body,
-          color: theme.palette.text.secondary,
-        }}
-        onPress={() => navigation.goBack()}
-      >
-        Already lifting with us? Go back to login.
-      </Text>
+      <TouchableOpacity onPress={() => router.back()}>
+        <Text className='text-gray-400 text-center'>
+          Już trenujesz z nami? Wróć do logowania.
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }

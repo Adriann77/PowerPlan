@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import type { RouteProp } from '@react-navigation/native';
 import {
   SafeAreaView,
   Text,
@@ -9,14 +8,8 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
+import { useLocalSearchParams, router } from 'expo-router';
 import { mockWorkoutState } from '../data/mockData';
-import type { RootStackParamList } from '../navigation';
-import { useTheme } from '../theme';
-
-type WorkoutSessionScreenProps = {
-  route: RouteProp<RootStackParamList, 'WorkoutSession'>;
-  navigation: any;
-};
 
 type ExerciseProgress = {
   exerciseId: string;
@@ -24,14 +17,80 @@ type ExerciseProgress = {
   weight: string;
 };
 
-export function WorkoutSessionScreen({
-  route,
-  navigation,
-}: WorkoutSessionScreenProps) {
-  const { theme } = useTheme();
+export function WorkoutSessionScreen() {
+  const { trainingDayId } = useLocalSearchParams<{ trainingDayId: string }>();
   const trainingDay = mockWorkoutState.plans
     .flatMap((plan) => plan.trainingDays)
-    .find((day) => day.id === route.params.trainingDayId);
+    .find((day) => day.id === trainingDayId);
+
+  // Theme colors for WorkoutSessionScreen (keeping for now)
+  const themeColors = {
+    background: '#0f0d24',
+    surface: '#1a1a2e',
+    surfaceMuted: '#2a2a3e',
+    primary: '#AB8BFF',
+    success: '#10b981',
+    warning: '#f59e0b',
+    text: {
+      primary: '#ffffff',
+      secondary: '#9ca4ab',
+      muted: '#6b7280',
+    },
+    border: '#374151',
+    palette: {
+      background: '#0f0d24',
+      surface: '#1a1a2e',
+      surfaceMuted: '#2a2a3e',
+      primary: '#AB8BFF',
+      success: '#10b981',
+      warning: '#f59e0b',
+      text: {
+        primary: '#ffffff',
+        secondary: '#9ca4ab',
+        muted: '#6b7280',
+      },
+      border: '#374151',
+    },
+    typography: {
+      heading1: {
+        fontSize: 24,
+        fontWeight: 'bold',
+      },
+      heading2: {
+        fontSize: 20,
+        fontWeight: '600',
+      },
+      heading3: {
+        fontSize: 18,
+        fontWeight: '600',
+      },
+      body: {
+        fontSize: 16,
+        fontWeight: 'normal',
+      },
+      button: {
+        fontSize: 16,
+        fontWeight: '600',
+      },
+      caption: {
+        fontSize: 14,
+        fontWeight: 'normal',
+      },
+    },
+    spacing: {
+      xs: 4,
+      sm: 8,
+      md: 16,
+      lg: 24,
+      xl: 32,
+    },
+    radii: {
+      sm: 4,
+      md: 8,
+      lg: 12,
+      full: 9999,
+    },
+  };
 
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [exerciseProgress, setExerciseProgress] = useState<
@@ -135,7 +194,7 @@ export function WorkoutSessionScreen({
     Alert.alert('Trening zapisany', 'Twój trening został pomyślnie zapisany!', [
       {
         text: 'OK',
-        onPress: () => navigation.goBack(),
+        onPress: () => router.back(),
       },
     ]);
   };
@@ -148,23 +207,9 @@ export function WorkoutSessionScreen({
 
   if (!trainingDay || !currentExercise) {
     return (
-      <SafeAreaView
-        style={{ flex: 1, backgroundColor: theme.palette.background }}
-      >
-        <View
-          style={{
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: theme.spacing.xl,
-          }}
-        >
-          <Text
-            style={{
-              ...theme.typography.heading2,
-              color: theme.palette.text.primary,
-            }}
-          >
+      <SafeAreaView className="flex-1 bg-slate-900">
+        <View className="flex-1 justify-center items-center px-6">
+          <Text className="text-2xl font-bold text-white">
             Nie znaleziono treningu
           </Text>
         </View>
@@ -174,81 +219,83 @@ export function WorkoutSessionScreen({
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: theme.palette.background }}
+        style={{ flex: 1, backgroundColor: themeColors.background }}
     >
-      <ScrollView style={{ flex: 1 }}>
-        {/* Header */}
-        <View
+      {/* Fixed Header */}
+      <View
+        style={{
+          paddingHorizontal: themeColors.spacing.lg,
+          paddingTop: themeColors.spacing.md,
+          paddingBottom: themeColors.spacing.lg,
+          borderBottomWidth: 1,
+          borderBottomColor: themeColors.palette.border,
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{ alignSelf: 'flex-start', marginBottom: themeColors.spacing.md }}
+        >
+          <Text
+            style={{ ...themeColors.typography.body, color: themeColors.palette.primary }}
+          >
+            ← Wróć
+          </Text>
+        </TouchableOpacity>
+        <Text
           style={{
-            paddingHorizontal: theme.spacing.lg,
-            paddingTop: theme.spacing.md,
-            paddingBottom: theme.spacing.lg,
-            borderBottomWidth: 1,
-            borderBottomColor: theme.palette.border,
+            ...themeColors.typography.heading1,
+            color: themeColors.palette.text.primary,
+            marginBottom: themeColors.spacing.xs,
           }}
         >
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={{ alignSelf: 'flex-start', marginBottom: theme.spacing.md }}
-          >
-            <Text
-              style={{ ...theme.typography.body, color: theme.palette.primary }}
-            >
-              ← Wróć
-            </Text>
-          </TouchableOpacity>
-          <Text
-            style={{
-              ...theme.typography.heading1,
-              color: theme.palette.text.primary,
-              marginBottom: theme.spacing.xs,
-            }}
-          >
-            {trainingDay.name}
-          </Text>
-          <Text
-            style={{
-              ...theme.typography.caption,
-              color: theme.palette.text.muted,
-            }}
-          >
-            Ćwiczenie {currentExerciseIndex + 1} z {totalExercises}
-          </Text>
-        </View>
+          {trainingDay.name}
+        </Text>
+        <Text
+          style={{
+            ...themeColors.typography.caption,
+            color: themeColors.palette.text.muted,
+          }}
+        >
+          Ćwiczenie {currentExerciseIndex + 1} z {totalExercises}
+        </Text>
+      </View>
+
+      {/* Scrollable Exercise Content */}
+      <ScrollView style={{ flex: 1 }}>
 
         {/* Exercise Info */}
-        <View style={{ padding: theme.spacing.lg }}>
+        <View style={{ padding: themeColors.spacing.lg }}>
           <View
             style={{
-              backgroundColor: theme.palette.surface,
-              borderRadius: theme.radii.lg,
-              padding: theme.spacing.lg,
-              marginBottom: theme.spacing.lg,
+              backgroundColor: themeColors.palette.surface,
+              borderRadius: themeColors.radii.lg,
+              padding: themeColors.spacing.lg,
+              marginBottom: themeColors.spacing.lg,
             }}
           >
             <View
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                marginBottom: theme.spacing.md,
+                marginBottom: themeColors.spacing.md,
               }}
             >
               <View
                 style={{
-                  backgroundColor: theme.palette.primary,
+                  backgroundColor: themeColors.palette.primary,
                   width: 40,
                   height: 40,
-                  borderRadius: theme.radii.full,
+                  borderRadius: themeColors.radii.full,
                   justifyContent: 'center',
                   alignItems: 'center',
-                  marginRight: theme.spacing.md,
+                  marginRight: themeColors.spacing.md,
                 }}
               >
                 <Text
                   style={[
-                    (theme.typography.button as any),
+                    (themeColors.typography.button as any),
                     {
-                      color: theme.palette.background,
+                      color: themeColors.palette.background,
                       fontSize: 18,
                     },
                   ]}
@@ -258,8 +305,8 @@ export function WorkoutSessionScreen({
               </View>
               <Text
                 style={{
-                  ...theme.typography.heading2,
-                  color: theme.palette.text.primary,
+                  ...themeColors.typography.heading2,
+                  color: themeColors.palette.text.primary,
                   flex: 1,
                 }}
               >
@@ -272,14 +319,14 @@ export function WorkoutSessionScreen({
               style={{
                 flexDirection: 'row',
                 flexWrap: 'wrap',
-                marginBottom: theme.spacing.md,
+                marginBottom: themeColors.spacing.md,
               }}
             >
-              <View style={{ width: '50%', marginBottom: theme.spacing.sm }}>
+              <View style={{ width: '50%', marginBottom: themeColors.spacing.sm }}>
                 <Text
                   style={{
-                    ...theme.typography.caption,
-                    color: theme.palette.text.muted,
+                    ...themeColors.typography.caption,
+                    color: themeColors.palette.text.muted,
                     marginBottom: 4,
                   }}
                 >
@@ -287,19 +334,19 @@ export function WorkoutSessionScreen({
                 </Text>
                 <Text
                   style={{
-                    ...theme.typography.body,
-                    color: theme.palette.text.primary,
+                    ...themeColors.typography.body,
+                    color: themeColors.palette.text.primary,
                     fontWeight: '600' as const,
                   }}
                 >
                   {currentExercise.sets}
                 </Text>
               </View>
-              <View style={{ width: '50%', marginBottom: theme.spacing.sm }}>
+              <View style={{ width: '50%', marginBottom: themeColors.spacing.sm }}>
                 <Text
                   style={{
-                    ...theme.typography.caption,
-                    color: theme.palette.text.muted,
+                    ...themeColors.typography.caption,
+                    color: themeColors.palette.text.muted,
                     marginBottom: 4,
                   }}
                 >
@@ -307,8 +354,8 @@ export function WorkoutSessionScreen({
                 </Text>
                 <Text
                   style={{
-                    ...theme.typography.body,
-                    color: theme.palette.text.primary,
+                    ...themeColors.typography.body,
+                    color: themeColors.palette.text.primary,
                     fontWeight: '600' as const,
                   }}
                 >
@@ -318,8 +365,8 @@ export function WorkoutSessionScreen({
               <View style={{ width: '50%' }}>
                 <Text
                   style={{
-                    ...theme.typography.caption,
-                    color: theme.palette.text.muted,
+                    ...themeColors.typography.caption,
+                    color: themeColors.palette.text.muted,
                     marginBottom: 4,
                   }}
                 >
@@ -327,8 +374,8 @@ export function WorkoutSessionScreen({
                 </Text>
                 <Text
                   style={{
-                    ...theme.typography.body,
-                    color: theme.palette.text.primary,
+                    ...themeColors.typography.body,
+                    color: themeColors.palette.text.primary,
                     fontWeight: '600' as const,
                   }}
                 >
@@ -338,8 +385,8 @@ export function WorkoutSessionScreen({
               <View style={{ width: '50%' }}>
                 <Text
                   style={{
-                    ...theme.typography.caption,
-                    color: theme.palette.text.muted,
+                    ...themeColors.typography.caption,
+                    color: themeColors.palette.text.muted,
                     marginBottom: 4,
                   }}
                 >
@@ -347,8 +394,8 @@ export function WorkoutSessionScreen({
                 </Text>
                 <Text
                   style={{
-                    ...theme.typography.body,
-                    color: theme.palette.text.primary,
+                    ...themeColors.typography.body,
+                    color: themeColors.palette.text.primary,
                     fontWeight: '600' as const,
                   }}
                 >
@@ -360,15 +407,15 @@ export function WorkoutSessionScreen({
             {currentExercise.notes && (
               <View
                 style={{
-                  backgroundColor: theme.palette.background,
-                  borderRadius: theme.radii.md,
-                  padding: theme.spacing.md,
+                  backgroundColor: themeColors.palette.background,
+                  borderRadius: themeColors.radii.md,
+                  padding: themeColors.spacing.md,
                 }}
               >
                 <Text
                   style={{
-                    ...theme.typography.caption,
-                    color: theme.palette.text.muted,
+                    ...themeColors.typography.caption,
+                    color: themeColors.palette.text.muted,
                     marginBottom: 4,
                   }}
                 >
@@ -376,8 +423,8 @@ export function WorkoutSessionScreen({
                 </Text>
                 <Text
                   style={{
-                    ...theme.typography.body,
-                    color: theme.palette.text.secondary,
+                    ...themeColors.typography.body,
+                    color: themeColors.palette.text.secondary,
                   }}
                 >
                   {currentExercise.notes}
@@ -389,33 +436,33 @@ export function WorkoutSessionScreen({
           {/* Weight Input */}
           <View
             style={{
-              backgroundColor: theme.palette.surface,
-              borderRadius: theme.radii.lg,
-              padding: theme.spacing.lg,
-              marginBottom: theme.spacing.lg,
+              backgroundColor: themeColors.palette.surface,
+              borderRadius: themeColors.radii.lg,
+              padding: themeColors.spacing.lg,
+              marginBottom: themeColors.spacing.lg,
             }}
           >
             <Text
               style={{
-                ...theme.typography.heading3,
-                color: theme.palette.text.primary,
-                marginBottom: theme.spacing.md,
+                ...themeColors.typography.heading3,
+                color: themeColors.palette.text.primary,
+                marginBottom: themeColors.spacing.md,
               }}
             >
               Obciążenie
             </Text>
             <TextInput
               style={{
-                backgroundColor: theme.palette.background,
-                borderRadius: theme.radii.md,
-                padding: theme.spacing.md,
-                color: theme.palette.text.primary,
+                backgroundColor: themeColors.palette.background,
+                borderRadius: themeColors.radii.md,
+                padding: themeColors.spacing.md,
+                color: themeColors.palette.text.primary,
                 fontSize: 16,
                 borderWidth: 1,
-                borderColor: theme.palette.border,
+                borderColor: themeColors.palette.border,
               }}
               placeholder='Wpisz ciężar (kg)'
-              placeholderTextColor={theme.palette.text.muted}
+              placeholderTextColor={themeColors.palette.text.muted}
               keyboardType='decimal-pad'
               value={progress?.weight || ''}
               onChangeText={updateWeight}
@@ -425,10 +472,10 @@ export function WorkoutSessionScreen({
           {/* Series Progress */}
           <View
             style={{
-              backgroundColor: theme.palette.surface,
-              borderRadius: theme.radii.lg,
-              padding: theme.spacing.lg,
-              marginBottom: theme.spacing.lg,
+              backgroundColor: themeColors.palette.surface,
+              borderRadius: themeColors.radii.lg,
+              padding: themeColors.spacing.lg,
+              marginBottom: themeColors.spacing.lg,
             }}
           >
             <View
@@ -436,21 +483,21 @@ export function WorkoutSessionScreen({
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: theme.spacing.md,
+                marginBottom: themeColors.spacing.md,
               }}
             >
               <Text
                 style={{
-                  ...theme.typography.heading3,
-                  color: theme.palette.text.primary,
+                  ...themeColors.typography.heading3,
+                  color: themeColors.palette.text.primary,
                 }}
               >
                 Postęp serii
               </Text>
               <Text
                 style={{
-                  ...theme.typography.heading3,
-                  color: theme.palette.primary,
+                  ...themeColors.typography.heading3,
+                  color: themeColors.palette.primary,
                 }}
               >
                 {progress?.completedSets || 0} / {currentExercise.sets}
@@ -459,7 +506,7 @@ export function WorkoutSessionScreen({
 
             {/* Series indicators */}
             <View
-              style={{ flexDirection: 'row', marginBottom: theme.spacing.lg }}
+              style={{ flexDirection: 'row', marginBottom: themeColors.spacing.lg }}
             >
               {Array.from({ length: currentExercise.sets }).map((_, index) => (
                 <View
@@ -469,11 +516,11 @@ export function WorkoutSessionScreen({
                     height: 8,
                     backgroundColor:
                       index < (progress?.completedSets || 0)
-                        ? theme.palette.success
-                        : theme.palette.surfaceMuted,
+                        ? themeColors.palette.success
+                        : themeColors.palette.surfaceMuted,
                     marginRight:
-                      index < currentExercise.sets - 1 ? theme.spacing.xs : 0,
-                    borderRadius: theme.radii.sm,
+                      index < currentExercise.sets - 1 ? themeColors.spacing.xs : 0,
+                    borderRadius: themeColors.radii.sm,
                   }}
                 />
               ))}
@@ -483,16 +530,16 @@ export function WorkoutSessionScreen({
               <TouchableOpacity
                 onPress={completeSet}
                 style={{
-                  backgroundColor: theme.palette.primary,
-                  borderRadius: theme.radii.md,
-                  padding: theme.spacing.md,
+                  backgroundColor: themeColors.palette.primary,
+                  borderRadius: themeColors.radii.md,
+                  padding: themeColors.spacing.md,
                   alignItems: 'center',
                 }}
               >
                 <Text
                   style={{
-                    ...theme.typography.button,
-                    color: theme.palette.background,
+                    ...themeColors.typography.button,
+                    color: themeColors.palette.background,
                   }}
                 >
                   Zakończ serię {(progress?.completedSets || 0) + 1}
@@ -501,16 +548,16 @@ export function WorkoutSessionScreen({
             ) : (
               <View
                 style={{
-                  backgroundColor: theme.palette.success,
-                  borderRadius: theme.radii.md,
-                  padding: theme.spacing.md,
+                  backgroundColor: themeColors.palette.success,
+                  borderRadius: themeColors.radii.md,
+                  padding: themeColors.spacing.md,
                   alignItems: 'center',
                 }}
               >
                 <Text
                   style={{
-                    ...theme.typography.button,
-                    color: theme.palette.background,
+                    ...themeColors.typography.button,
+                    color: themeColors.palette.background,
                   }}
                 >
                   ✓ Wszystkie serie ukończone
@@ -522,24 +569,24 @@ export function WorkoutSessionScreen({
           {/* Timer */}
           <View
             style={{
-              backgroundColor: theme.palette.surface,
-              borderRadius: theme.radii.lg,
-              padding: theme.spacing.lg,
-              marginBottom: theme.spacing.lg,
+              backgroundColor: themeColors.palette.surface,
+              borderRadius: themeColors.radii.lg,
+              padding: themeColors.spacing.lg,
+              marginBottom: themeColors.spacing.lg,
             }}
           >
             <Text
               style={{
-                ...theme.typography.heading3,
-                color: theme.palette.text.primary,
-                marginBottom: theme.spacing.md,
+                ...themeColors.typography.heading3,
+                color: themeColors.palette.text.primary,
+                marginBottom: themeColors.spacing.md,
               }}
             >
               Timer odpoczynku
             </Text>
 
             <View
-              style={{ alignItems: 'center', marginBottom: theme.spacing.md }}
+              style={{ alignItems: 'center', marginBottom: themeColors.spacing.md }}
             >
               <Text
                 style={{
@@ -547,34 +594,29 @@ export function WorkoutSessionScreen({
                   fontWeight: '700' as const,
                   color:
                     timerSeconds > 0
-                      ? theme.palette.primary
-                      : theme.palette.text.muted,
-                  marginBottom: theme.spacing.sm,
+                      ? themeColors.palette.primary
+                      : themeColors.palette.text.muted,
+                  marginBottom: themeColors.spacing.sm,
                 }}
               >
                 {formatTime(timerSeconds)}
               </Text>
             </View>
 
-            <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+            <View style={{ flexDirection: 'row', gap: themeColors.spacing.sm }}>
               {!isTimerRunning ? (
                 <TouchableOpacity
                   onPress={startTimer}
                   style={{
                     flex: 1,
-                    backgroundColor: theme.palette.primary,
-                    borderRadius: theme.radii.md,
-                    padding: theme.spacing.md,
+                    backgroundColor: themeColors.palette.primary,
+                    borderRadius: themeColors.radii.md,
+                    padding: themeColors.spacing.md,
                     alignItems: 'center',
                   }}
                 >
-                  <Text
-                    style={{
-                      ...theme.typography.button,
-                      color: theme.palette.background,
-                    }}
-                  >
-                    Start
+                  <Text className="text-white font-semibold">
+                    Rozpocznij
                   </Text>
                 </TouchableOpacity>
               ) : (
@@ -582,16 +624,16 @@ export function WorkoutSessionScreen({
                   onPress={stopTimer}
                   style={{
                     flex: 1,
-                    backgroundColor: theme.palette.warning,
-                    borderRadius: theme.radii.md,
-                    padding: theme.spacing.md,
+                    backgroundColor: themeColors.palette.warning,
+                    borderRadius: themeColors.radii.md,
+                    padding: themeColors.spacing.md,
                     alignItems: 'center',
                   }}
                 >
                   <Text
                     style={{
-                      ...theme.typography.button,
-                      color: theme.palette.background,
+                      ...themeColors.typography.button,
+                      color: themeColors.palette.background,
                     }}
                   >
                     Pauza
@@ -602,19 +644,14 @@ export function WorkoutSessionScreen({
                 onPress={resetTimer}
                 style={{
                   flex: 1,
-                  backgroundColor: theme.palette.surfaceMuted,
-                  borderRadius: theme.radii.md,
-                  padding: theme.spacing.md,
+                  backgroundColor: themeColors.palette.surfaceMuted,
+                  borderRadius: themeColors.radii.md,
+                  padding: themeColors.spacing.md,
                   alignItems: 'center',
                 }}
               >
-                <Text
-                  style={{
-                    ...theme.typography.button,
-                    color: theme.palette.text.primary,
-                  }}
-                >
-                  Reset
+                <Text className="text-white font-semibold">
+                  Zresetuj
                 </Text>
               </TouchableOpacity>
             </View>
@@ -624,8 +661,8 @@ export function WorkoutSessionScreen({
           <View
             style={{
               flexDirection: 'row',
-              gap: theme.spacing.md,
-              marginBottom: theme.spacing.lg,
+              gap: themeColors.spacing.md,
+              marginBottom: themeColors.spacing.lg,
             }}
           >
             <TouchableOpacity
@@ -635,79 +672,164 @@ export function WorkoutSessionScreen({
                 flex: 1,
                 backgroundColor:
                   currentExerciseIndex === 0
-                    ? theme.palette.surfaceMuted
-                    : theme.palette.surface,
-                borderRadius: theme.radii.md,
-                padding: theme.spacing.md,
+                    ? themeColors.palette.surfaceMuted
+                    : themeColors.palette.surface,
+                borderRadius: themeColors.radii.md,
+                padding: themeColors.spacing.md,
                 alignItems: 'center',
                 borderWidth: 1,
-                borderColor: theme.palette.border,
+                borderColor: themeColors.palette.border,
               }}
             >
               <Text
                 style={{
-                  ...theme.typography.button,
+                  ...themeColors.typography.button,
                   color:
                     currentExerciseIndex === 0
-                      ? theme.palette.text.muted
-                      : theme.palette.text.primary,
+                      ? themeColors.palette.text.muted
+                      : themeColors.palette.text.primary,
                 }}
               >
                 ← Poprzednie
               </Text>
             </TouchableOpacity>
+            {currentExerciseIndex === totalExercises - 1 ? (
+              <TouchableOpacity
+                onPress={saveWorkout}
+                style={{
+                  flex: 1,
+                  backgroundColor: themeColors.palette.success,
+                  borderRadius: themeColors.radii.md,
+                  padding: themeColors.spacing.md,
+                  alignItems: 'center',
+                }}
+              >
+                <Text
+                  style={{
+                    ...themeColors.typography.button,
+                    color: themeColors.palette.background,
+                    fontSize: 16,
+                  }}
+                >
+                  Zapisz trening
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={goToNextExercise}
+                style={{
+                  flex: 1,
+                  backgroundColor: themeColors.palette.surface,
+                  borderRadius: themeColors.radii.md,
+                  padding: themeColors.spacing.md,
+                  alignItems: 'center',
+                  borderWidth: 1,
+                  borderColor: themeColors.palette.border,
+                }}
+              >
+                <Text
+                  style={{
+                    ...themeColors.typography.button,
+                    color: themeColors.palette.text.primary,
+                  }}
+                >
+                  Następne →
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Fixed Navigation Buttons */}
+      <View
+        style={{
+          padding: themeColors.spacing.lg,
+          borderTopWidth: 1,
+          borderTopColor: themeColors.palette.border,
+          backgroundColor: themeColors.background,
+        }}
+      >
+        <View
+          style={{
+            flexDirection: 'row',
+            gap: themeColors.spacing.md,
+          }}
+        >
+          <TouchableOpacity
+            onPress={goToPreviousExercise}
+            disabled={currentExerciseIndex === 0}
+            style={{
+              flex: 1,
+              backgroundColor:
+                currentExerciseIndex === 0
+                  ? themeColors.palette.surfaceMuted
+                  : themeColors.palette.surface,
+              borderRadius: themeColors.radii.md,
+              padding: themeColors.spacing.md,
+              alignItems: 'center',
+              borderWidth: 1,
+              borderColor: themeColors.palette.border,
+            }}
+          >
+            <Text
+              style={{
+                ...themeColors.typography.button,
+                color:
+                  currentExerciseIndex === 0
+                    ? themeColors.palette.text.muted
+                    : themeColors.palette.text.primary,
+              }}
+            >
+              ← Poprzednie
+            </Text>
+          </TouchableOpacity>
+          {currentExerciseIndex === totalExercises - 1 ? (
             <TouchableOpacity
-              onPress={goToNextExercise}
-              disabled={currentExerciseIndex === totalExercises - 1}
+              onPress={saveWorkout}
               style={{
                 flex: 1,
-                backgroundColor:
-                  currentExerciseIndex === totalExercises - 1
-                    ? theme.palette.surfaceMuted
-                    : theme.palette.surface,
-                borderRadius: theme.radii.md,
-                padding: theme.spacing.md,
+                backgroundColor: themeColors.palette.success,
+                borderRadius: themeColors.radii.md,
+                padding: themeColors.spacing.md,
                 alignItems: 'center',
-                borderWidth: 1,
-                borderColor: theme.palette.border,
               }}
             >
               <Text
                 style={{
-                  ...theme.typography.button,
-                  color:
-                    currentExerciseIndex === totalExercises - 1
-                      ? theme.palette.text.muted
-                      : theme.palette.text.primary,
+                  ...themeColors.typography.button,
+                  color: themeColors.palette.background,
+                  fontSize: 16,
+                }}
+              >
+                Zapisz trening
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={goToNextExercise}
+              style={{
+                flex: 1,
+                backgroundColor: themeColors.palette.surface,
+                borderRadius: themeColors.radii.md,
+                padding: themeColors.spacing.md,
+                alignItems: 'center',
+                borderWidth: 1,
+                borderColor: themeColors.palette.border,
+              }}
+            >
+              <Text
+                style={{
+                  ...themeColors.typography.button,
+                  color: themeColors.palette.text.primary,
                 }}
               >
                 Następne →
               </Text>
             </TouchableOpacity>
-          </View>
-
-          {/* Save Workout Button */}
-          <TouchableOpacity
-            onPress={saveWorkout}
-            style={{
-              backgroundColor: theme.palette.success,
-              borderRadius: theme.radii.lg,
-              padding: theme.spacing.lg,
-              alignItems: 'center',
-            }}
-          >
-            <Text
-              style={{
-                ...theme.typography.button,
-                color: theme.palette.background,
-                fontSize: 18,
-              }}
-            >
-              Zapisz trening
-            </Text>
-          </TouchableOpacity>
+          )}
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }

@@ -1,14 +1,9 @@
 import { useState } from 'react';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
-import type { AuthStackParamList } from '../navigation';
+import { router } from 'expo-router';
 import { useAuth } from '../providers/AuthProvider';
-import { useTheme } from '../theme';
 
-type LoginScreenProps = NativeStackScreenProps<AuthStackParamList, 'Login'>;
-
-export function LoginScreen({ navigation }: LoginScreenProps) {
-  const { theme } = useTheme();
+export function LoginScreen() {
   const { login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -33,103 +28,46 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
   };
 
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: 'center',
-        paddingHorizontal: theme.spacing.xl,
-        backgroundColor: theme.palette.background,
-      }}
-    >
-      <Text
-        style={{
-          ...theme.typography.heading1,
-          color: theme.palette.text.primary,
-          marginBottom: theme.spacing.md,
-        }}
-      >
-        Login
-      </Text>
+    <View className='flex-1 justify-center px-6 bg-slate-900'>
+      <Text className='text-3xl font-bold text-white mb-4'>Logowanie</Text>
       <TextInput
         autoCapitalize='none'
         autoCorrect={false}
-        placeholder='Username'
-        placeholderTextColor={theme.palette.text.muted}
+        placeholder='Nazwa użytkownika'
+        placeholderTextColor='#9ca4ab'
         value={username}
         onChangeText={setUsername}
-        style={{
-          borderWidth: 1,
-          borderColor: theme.palette.border,
-          borderRadius: theme.radii.md,
-          paddingHorizontal: theme.spacing.md,
-          paddingVertical: theme.spacing.sm,
-          color: theme.palette.text.primary,
-          marginBottom: theme.spacing.md,
-        }}
+        className='border border-gray-600 rounded-lg px-4 py-3 text-white mb-4 bg-slate-800'
       />
       <TextInput
         autoCapitalize='none'
         autoCorrect={false}
-        placeholder='Password'
-        placeholderTextColor={theme.palette.text.muted}
+        placeholder='Hasło'
+        placeholderTextColor='#9ca4ab'
         value={password}
         onChangeText={setPassword}
         secureTextEntry
-        style={{
-          borderWidth: 1,
-          borderColor: theme.palette.border,
-          borderRadius: theme.radii.md,
-          paddingHorizontal: theme.spacing.md,
-          paddingVertical: theme.spacing.sm,
-          color: theme.palette.text.primary,
-          marginBottom: theme.spacing.md,
-        }}
+        className='border border-gray-600 rounded-lg px-4 py-3 text-white mb-4 bg-slate-800'
       />
       {error ? (
-        <Text
-          style={{
-            ...theme.typography.caption,
-            color: theme.palette.danger,
-            marginBottom: theme.spacing.md,
-          }}
-        >
-          {error}
-        </Text>
+        <Text className='text-red-400 mb-4 text-sm'>{error}</Text>
       ) : null}
       <TouchableOpacity
         onPress={handleSubmit}
         disabled={submitting}
-        style={{
-          backgroundColor: submitting
-            ? theme.palette.surfaceMuted
-            : theme.palette.primary,
-          paddingVertical: theme.spacing.md,
-          borderRadius: theme.radii.md,
-          marginBottom: theme.spacing.lg,
-          opacity: submitting ? 0.7 : 1,
-        }}
+        className={`py-3 rounded-lg mb-6 ${submitting ? 'bg-gray-600 opacity-70' : 'bg-purple-600'}`}
       >
         <Text
-          style={{
-            ...theme.typography.heading3,
-            color: submitting
-              ? theme.palette.text.secondary
-              : theme.palette.text.inverse,
-            textAlign: 'center',
-          }}
+          className={`text-center font-semibold ${submitting ? 'text-gray-300' : 'text-white'}`}
         >
-          {submitting ? 'Signing in…' : 'Sign in'}
+          {submitting ? 'Logowanie…' : 'Zaloguj się'}
         </Text>
       </TouchableOpacity>
-      <Text
-        style={{
-          ...theme.typography.body,
-          color: theme.palette.text.secondary,
-        }}
-        onPress={() => navigation.navigate('Register')}
-      >
-        New athlete? Tap here to register.
-      </Text>
+      <TouchableOpacity onPress={() => router.push('/register')}>
+        <Text className='text-purple-400 text-center'>
+          Nowy sportowiec? Kliknij tutaj, aby się zarejestrować.
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }

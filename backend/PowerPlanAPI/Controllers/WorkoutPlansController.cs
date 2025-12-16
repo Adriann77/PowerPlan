@@ -55,15 +55,25 @@ public class WorkoutPlansController : ControllerBase
         {
             return NotFound();
         }
-
         return Ok(plan);
     }
 
     // SCRUM-55: Implement POST /api/workoutplans
     [HttpPost]
-    public async Task<ActionResult<WorkoutPlan>> CreateWorkoutPlan([FromBody] WorkoutPlan request)
+    public async Task<ActionResult<WorkoutPlanDTO>> CreateWorkoutPlan([FromBody] CreateWorkoutPlanDTO request)
     {
         var userId = GetCurrentUserId();
+
+        var user = await _db.Users.FirstOrDefaultAsync(p => p.Id == userId);
+
+        if (user == null)
+            return BadRequest(new { error = "User not found" });
+
+        var existed = await _db.WorkoutPlans
+            .FirstOrDefaultAsync(p => p.Name == request.Name && p.UserId == userId);
+
+        if (existed != null)
+            return Conflict(new { error = "Workout plan with this name already exists." });
 
         var plan = new WorkoutPlan
         {
@@ -73,20 +83,40 @@ public class WorkoutPlansController : ControllerBase
             Description = request.Description,
             WeekDuration = request.WeekDuration,
             IsActive = request.IsActive,
+            User = user,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        _db.WorkoutPlans.Add(plan);
-        await _db.SaveChangesAsync();
+        try
+        {
+            _db.WorkoutPlans.Add(plan);
+            await _db.SaveChangesAsync();
+        }
+        catch (Exception err)
+        {
+            return StatusCode(500, new { error = "An unexpected error occurred.", details = err.Message });
+        }
 
-        // Zwracamy 201 + Location header
-        return CreatedAtAction(nameof(GetWorkoutPlanById), new { id = plan.Id }, plan);
+        var planDto = new WorkoutPlanDTO
+        {
+            Id = plan.Id,
+            Name = plan.Name,
+            Description = plan.Description,
+            WeekDuration = plan.WeekDuration,
+            IsActive = plan.IsActive,
+            CreatedAt = plan.CreatedAt,
+            UpdatedAt = plan.UpdatedAt,
+            TrainingDaysCount = plan.TrainingDays.Count,
+            WorkoutSessionsCount = plan.WorkoutSessions.Count
+        };
+
+        return CreatedAtAction(nameof(GetWorkoutPlanById), new { id = plan.Id }, planDto);
     }
 
     // SCRUM-56: PUT /api/workoutplans/{id}
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateWorkoutPlan(string id, [FromBody] WorkoutPlan request)
+    public async Task<IActionResult> UpdateWorkoutPlan(string id, [FromBody] UpdateWorkoutPlanDTO request)
     {
         var userId = GetCurrentUserId();
 
@@ -95,8 +125,14 @@ public class WorkoutPlansController : ControllerBase
 
         if (plan == null)
         {
-            return NotFound();
+            return NotFound(new { error = "Workout plan not found." });
         }
+
+        var duplicate = await _db.WorkoutPlans
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.Name == request.Name && p.Id != id);
+
+        if (duplicate != null)
+            return Conflict(new { error = "Workout plan with this name already exists." });
 
         plan.Name = request.Name;
         plan.Description = request.Description;
@@ -104,9 +140,18 @@ public class WorkoutPlansController : ControllerBase
         plan.IsActive = request.IsActive;
         plan.UpdatedAt = DateTime.UtcNow;
 
-        await _db.SaveChangesAsync();
+        try
+        {
 
-        return NoContent();
+            await _db.SaveChangesAsync();
+
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "An unexpected error occurred.", details = ex.Message });
+        }
+
+        return Ok(new { message = "Workout plan updated successfully." });
     }
 
     // SCRUM-57: DELETE /api/workoutplans/{id}
@@ -120,12 +165,12 @@ public class WorkoutPlansController : ControllerBase
 
         if (plan == null)
         {
-            return NotFound();
+            return NotFound(new{error = "Workout plan not found"});
         }
 
         _db.WorkoutPlans.Remove(plan);
         await _db.SaveChangesAsync();
 
-        return NoContent();
+        return Ok(new {message="Workout plan successfully deleted" });
     }
 }

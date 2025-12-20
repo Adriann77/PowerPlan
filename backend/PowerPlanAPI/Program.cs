@@ -16,8 +16,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // ➤ DATABASE
+var dbPath = Path.Combine(Directory.GetCurrentDirectory(), "powerplan.db");
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
+    options.UseSqlite($"Data Source={dbPath}"));
 
 // ➤ SERVICES
 builder.Services.AddScoped<IAuthService, AuthService>();

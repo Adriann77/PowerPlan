@@ -23,6 +23,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // ➤ SERVICES
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    })
     .ConfigureApiBehaviorOptions(options =>
     {
         // Ensure validation errors return JSON instead of HTML

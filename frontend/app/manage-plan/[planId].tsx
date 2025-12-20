@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,35 +9,21 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-
-interface Exercise {
-  id: string;
-  name: string;
-  sets: number;
-  reps: string;
-  tempo: string;
-  restSeconds: number;
-  notes?: string;
-  orderNumber: number;
-}
-
-interface TrainingDay {
-  id: string;
-  name: string;
-  description?: string;
-  exercises: Exercise[];
-}
+import { apiClient, TrainingDay, Exercise } from '../../src/services/api';
 
 export default function ManagePlanScreen() {
   const { planId } = useLocalSearchParams<{ planId: string }>();
   const insets = useSafeAreaInsets();
   const [trainingDays, setTrainingDays] = useState<TrainingDay[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [showAddDayModal, setShowAddDayModal] = useState(false);
   const [showAddExerciseModal, setShowAddExerciseModal] = useState(false);
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null);
@@ -51,24 +37,50 @@ export default function ManagePlanScreen() {
     notes: '',
   });
 
-  const addTrainingDay = () => {
+  useEffect(() => {
+    if (planId) {
+      fetchTrainingDays();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planId]);
+
+  const fetchTrainingDays = async () => {
+    try {
+      setIsLoading(true);
+      const days = await apiClient.getTrainingDays(planId);
+      setTrainingDays(days);
+    } catch (error) {
+      Alert.alert('Błąd', 'Nie udało się pobrać dni treningowych');
+      console.error('Fetch training days error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const addTrainingDay = async () => {
     if (!newDayName.trim()) {
       Alert.alert('Błąd', 'Nazwa dnia treningowego jest wymagana');
       return;
     }
 
-    const newDay: TrainingDay = {
-      id: Date.now().toString(),
-      name: newDayName,
-      exercises: [],
-    };
-
-    setTrainingDays((prev) => [...prev, newDay]);
-    setNewDayName('');
-    setShowAddDayModal(false);
+    try {
+      setIsSaving(true);
+      const newDay = await apiClient.createTrainingDay(planId, {
+        name: newDayName,
+      });
+      setTrainingDays((prev) => [...prev, { ...newDay, exercises: [] }]);
+      setNewDayName('');
+      setShowAddDayModal(false);
+      Alert.alert('Sukces', 'Dzień treningowy został dodany');
+    } catch (error) {
+      Alert.alert('Błąd', 'Nie udało się dodać dnia treningowego');
+      console.error('Create training day error:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const addExercise = () => {
+  const addExercise = async () => {
     if (!newExercise.name.trim() || !newExercise.reps.trim()) {
       Alert.alert('Błąd', 'Nazwa ćwiczenia i liczba powtórzeń są wymagane');
       return;
@@ -76,32 +88,46 @@ export default function ManagePlanScreen() {
 
     if (!selectedDayId) return;
 
-    const exercise: Exercise = {
-      id: Date.now().toString(),
-      ...newExercise,
-      orderNumber:
-        trainingDays.find((d) => d.id === selectedDayId)?.exercises.length ||
-        0 + 1,
-    };
+    try {
+      setIsSaving(true);
+      const orderNumber =
+        trainingDays.find((d) => d.id === selectedDayId)?.exercises.length || 0;
 
-    setTrainingDays((prev) =>
-      prev.map((day) =>
-        day.id === selectedDayId
-          ? { ...day, exercises: [...day.exercises, exercise] }
-          : day,
-      ),
-    );
+      const exercise = await apiClient.createExercise(selectedDayId, {
+        name: newExercise.name,
+        sets: newExercise.sets,
+        reps: parseInt(newExercise.reps, 10) || 1,
+        tempo: newExercise.tempo,
+        restSeconds: newExercise.restSeconds,
+        notes: newExercise.notes || undefined,
+        orderNumber: orderNumber + 1,
+      });
 
-    setNewExercise({
-      name: '',
-      sets: 1,
-      reps: '',
-      tempo: '3-1-1-0',
-      restSeconds: 90,
-      notes: '',
-    });
-    setShowAddExerciseModal(false);
-    setSelectedDayId(null);
+      setTrainingDays((prev) =>
+        prev.map((day) =>
+          day.id === selectedDayId
+            ? { ...day, exercises: [...day.exercises, exercise] }
+            : day,
+        ),
+      );
+
+      setNewExercise({
+        name: '',
+        sets: 1,
+        reps: '',
+        tempo: '3-1-1-0',
+        restSeconds: 90,
+        notes: '',
+      });
+      setShowAddExerciseModal(false);
+      setSelectedDayId(null);
+      Alert.alert('Sukces', 'Ćwiczenie zostało dodane');
+    } catch (error) {
+      Alert.alert('Błąd', 'Nie udało się dodać ćwiczenia');
+      console.error('Create exercise error:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const openAddExerciseModal = (dayId: string) => {
@@ -131,7 +157,11 @@ export default function ManagePlanScreen() {
 
         {/* Content */}
         <View className='flex-1 px-6 pt-4'>
-          {trainingDays.length === 0 ? (
+          {isLoading ? (
+            <View className='flex-1 justify-center items-center'>
+              <ActivityIndicator size='large' color='#AB8BFF' />
+            </View>
+          ) : trainingDays.length === 0 ? (
             <View className='flex-1 justify-center items-center'>
               <Text className='text-gray-400 text-lg mb-6 text-center'>
                 Brak dni treningowych
@@ -251,14 +281,20 @@ export default function ManagePlanScreen() {
                 <TouchableOpacity
                   onPress={() => setShowAddDayModal(false)}
                   className='flex-1 bg-gray-600 rounded-lg py-3 items-center mr-2'
+                  disabled={isSaving}
                 >
                   <Text className='text-white font-semibold'>Anuluj</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={addTrainingDay}
                   className='flex-1 bg-purple-600 rounded-lg py-3 items-center ml-2'
+                  disabled={isSaving}
                 >
-                  <Text className='text-white font-semibold'>Dodaj</Text>
+                  {isSaving ? (
+                    <ActivityIndicator size='small' color='#FFF' />
+                  ) : (
+                    <Text className='text-white font-semibold'>Dodaj</Text>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>
@@ -386,14 +422,20 @@ export default function ManagePlanScreen() {
                 <TouchableOpacity
                   onPress={() => setShowAddExerciseModal(false)}
                   className='flex-1 bg-gray-600 rounded-lg py-3 items-center mr-2'
+                  disabled={isSaving}
                 >
                   <Text className='text-white font-semibold'>Anuluj</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={addExercise}
                   className='flex-1 bg-purple-600 rounded-lg py-3 items-center ml-2'
+                  disabled={isSaving}
                 >
-                  <Text className='text-white font-semibold'>Dodaj</Text>
+                  {isSaving ? (
+                    <ActivityIndicator size='small' color='#FFF' />
+                  ) : (
+                    <Text className='text-white font-semibold'>Dodaj</Text>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>

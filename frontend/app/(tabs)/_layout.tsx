@@ -26,28 +26,17 @@ export default function TabLayout() {
           },
           headerTintColor: '#9ca4ab',
           headerTitle: currentUser?.username ?? 'PowerPlan',
-          headerRight: () =>
-            currentUser ? (
-              <TouchableOpacity
-                onPress={handleLogout}
-                accessibilityRole='button'
-                style={{ paddingHorizontal: 12, paddingVertical: 6 }}
-              >
-                <Text style={{ color: '#AB8BFF', fontWeight: '600' }}>
-                  Wyloguj
-                </Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                onPress={() => router.push('/login')}
-                accessibilityRole='button'
-                style={{ paddingHorizontal: 12, paddingVertical: 6 }}
-              >
-                <Text style={{ color: '#AB8BFF', fontWeight: '600' }}>
-                  Zaloguj
-                </Text>
-              </TouchableOpacity>
-            ),
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={handleLogout}
+              accessibilityRole='button'
+              style={{ paddingHorizontal: 12, paddingVertical: 6 }}
+            >
+              <Text style={{ color: '#AB8BFF', fontWeight: '600' }}>
+                Wyloguj
+              </Text>
+            </TouchableOpacity>
+          ),
           tabBarStyle: {
             backgroundColor: '#030014',
             borderTopColor: '#151312',

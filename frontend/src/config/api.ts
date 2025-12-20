@@ -35,4 +35,25 @@ export const API_ENDPOINTS = {
     LOGOUT: '/auth/logout',
     ME: '/auth/me',
   },
+  WORKOUT_PLANS: {
+    LIST: '/api/workoutplans',
+    CREATE: '/api/workoutplans',
+    GET: (id: string) => `/api/workoutplans/${id}`,
+    UPDATE: (id: string) => `/api/workoutplans/${id}`,
+    DELETE: (id: string) => `/api/workoutplans/${id}`,
+  },
+  TRAINING_DAYS: {
+    LIST: (planId: string) => `/api/workoutplans/${planId}/trainingdays`,
+    CREATE: (planId: string) => `/api/workoutplans/${planId}/trainingdays`,
+    GET: (planId: string, dayId: string) => `/api/workoutplans/${planId}/trainingdays/${dayId}`,
+    UPDATE: (planId: string, dayId: string) => `/api/workoutplans/${planId}/trainingdays/${dayId}`,
+    DELETE: (planId: string, dayId: string) => `/api/workoutplans/${planId}/trainingdays/${dayId}`,
+  },
+  EXERCISES: {
+    LIST: (dayId: string) => `/api/trainingdays/${dayId}/exercises`,
+    CREATE: (dayId: string) => `/api/trainingdays/${dayId}/exercises`,
+    GET: (dayId: string, exerciseId: string) => `/api/trainingdays/${dayId}/exercises/${exerciseId}`,
+    UPDATE: (dayId: string, exerciseId: string) => `/api/trainingdays/${dayId}/exercises/${exerciseId}`,
+    DELETE: (dayId: string, exerciseId: string) => `/api/trainingdays/${dayId}/exercises/${exerciseId}`,
+  },
 } as const;

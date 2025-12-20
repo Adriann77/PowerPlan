@@ -8,9 +8,11 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { apiClient } from '../src/services/api';
 
 interface PlanFormData {
   name: string;
@@ -20,6 +22,7 @@ interface PlanFormData {
 
 export default function CreatePlanScreen() {
   const [step, setStep] = useState(1);
+  const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState<PlanFormData>({
     name: '',
     duration: '',
@@ -30,7 +33,7 @@ export default function CreatePlanScreen() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const nextStep = () => {
+  const nextStep = async () => {
     if (step === 1 && !formData.name.trim()) {
       Alert.alert('Błąd', 'Nazwa planu jest wymagana');
       return;
@@ -42,9 +45,29 @@ export default function CreatePlanScreen() {
     if (step < 3) {
       setStep(step + 1);
     } else {
-      // Create plan and navigate to workout management
-      const newPlanId = Date.now().toString(); // Mock ID
-      router.push(`/manage-plan/${newPlanId}`);
+      // Create plan via API
+      setIsCreating(true);
+      try {
+        const plan = await apiClient.createWorkoutPlan({
+          name: formData.name.trim(),
+          description: formData.description.trim() || undefined,
+          weekDuration: parseInt(formData.duration, 10),
+          isActive: false,
+        });
+        Alert.alert('Sukces', 'Plan treningowy został utworzony!', [
+          {
+            text: 'OK',
+            onPress: () => router.push(`/manage-plan/${plan.id}`),
+          },
+        ]);
+      } catch (error) {
+        Alert.alert(
+          'Błąd',
+          error instanceof Error ? error.message : 'Nie udało się utworzyć planu',
+        );
+      } finally {
+        setIsCreating(false);
+      }
     }
   };
 
@@ -166,11 +189,18 @@ export default function CreatePlanScreen() {
           <View className='px-6 py-6 border-t border-gray-600'>
             <TouchableOpacity
               onPress={nextStep}
-              className='bg-purple-600 rounded-lg py-4 items-center'
+              disabled={isCreating}
+              className={`rounded-lg py-4 items-center ${
+                isCreating ? 'bg-gray-600' : 'bg-purple-600'
+              }`}
             >
-              <Text className='text-white font-semibold text-lg'>
-                {step === 3 ? 'Utwórz Plan' : 'Dalej'}
-              </Text>
+              {isCreating ? (
+                <ActivityIndicator color='#ffffff' />
+              ) : (
+                <Text className='text-white font-semibold text-lg'>
+                  {step === 3 ? 'Utwórz Plan' : 'Dalej'}
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>

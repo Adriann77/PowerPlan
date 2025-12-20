@@ -223,6 +223,170 @@ class ApiClient {
       return false;
     }
   }
+
+  // Workout Plans
+  async getWorkoutPlans(): Promise<WorkoutPlan[]> {
+    return this.request<WorkoutPlan[]>(API_ENDPOINTS.WORKOUT_PLANS.LIST, {
+      method: 'GET',
+    });
+  }
+
+  async createWorkoutPlan(data: CreateWorkoutPlanRequest): Promise<WorkoutPlan> {
+    return this.request<WorkoutPlan>(API_ENDPOINTS.WORKOUT_PLANS.CREATE, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getWorkoutPlan(id: string): Promise<WorkoutPlan> {
+    return this.request<WorkoutPlan>(API_ENDPOINTS.WORKOUT_PLANS.GET(id), {
+      method: 'GET',
+    });
+  }
+
+  async updateWorkoutPlan(id: string, data: UpdateWorkoutPlanRequest): Promise<void> {
+    await this.request(API_ENDPOINTS.WORKOUT_PLANS.UPDATE(id), {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Training Days
+  async getTrainingDays(planId: string): Promise<TrainingDay[]> {
+    return this.request<TrainingDay[]>(API_ENDPOINTS.TRAINING_DAYS.LIST(planId), {
+      method: 'GET',
+    });
+  }
+
+  async createTrainingDay(planId: string, data: CreateTrainingDayRequest): Promise<TrainingDay> {
+    return this.request<TrainingDay>(API_ENDPOINTS.TRAINING_DAYS.CREATE(planId), {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateTrainingDay(planId: string, dayId: string, data: UpdateTrainingDayRequest): Promise<TrainingDay> {
+    return this.request<TrainingDay>(API_ENDPOINTS.TRAINING_DAYS.UPDATE(planId, dayId), {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteTrainingDay(planId: string, dayId: string): Promise<void> {
+    await this.request(API_ENDPOINTS.TRAINING_DAYS.DELETE(planId, dayId), {
+      method: 'DELETE',
+    });
+  }
+
+  // Exercises
+  async getExercises(dayId: string): Promise<Exercise[]> {
+    return this.request<Exercise[]>(API_ENDPOINTS.EXERCISES.LIST(dayId), {
+      method: 'GET',
+    });
+  }
+
+  async createExercise(dayId: string, data: CreateExerciseRequest): Promise<Exercise> {
+    return this.request<Exercise>(API_ENDPOINTS.EXERCISES.CREATE(dayId), {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateExercise(dayId: string, exerciseId: string, data: UpdateExerciseRequest): Promise<Exercise> {
+    return this.request<Exercise>(API_ENDPOINTS.EXERCISES.UPDATE(dayId, exerciseId), {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteExercise(dayId: string, exerciseId: string): Promise<void> {
+    await this.request(API_ENDPOINTS.EXERCISES.DELETE(dayId, exerciseId), {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const apiClient = new ApiClient();
+
+// Workout Plan types
+export type WorkoutPlan = {
+  id: string;
+  name: string;
+  description?: string;
+  weekDuration: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  trainingDaysCount: number;
+  workoutSessionsCount: number;
+};
+
+export type CreateWorkoutPlanRequest = {
+  name: string;
+  description?: string;
+  weekDuration: number;
+  isActive: boolean;
+};
+
+export type UpdateWorkoutPlanRequest = {
+  name: string;
+  description?: string;
+  weekDuration: number;
+  isActive: boolean;
+};
+
+export type TrainingDay = {
+  id: string;
+  workoutPlanId: string;
+  name: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+  exercises: Exercise[];
+};
+
+export type CreateTrainingDayRequest = {
+  name: string;
+  description?: string;
+};
+
+export type UpdateTrainingDayRequest = {
+  name: string;
+  description?: string;
+};
+
+export type Exercise = {
+  id: string;
+  trainingDayId: string;
+  orderNumber: string;
+  name: string;
+  sets: number;
+  reps: number;
+  tempo: string;
+  restSeconds: number;
+  notes?: string;
+  videoUrl?: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateExerciseRequest = {
+  name: string;
+  sets: number;
+  reps: number;
+  tempo?: string;
+  restSeconds: number;
+  notes?: string;
+  orderNumber: number;
+};
+
+export type UpdateExerciseRequest = {
+  name: string;
+  sets: number;
+  reps: number;
+  tempo?: string;
+  restSeconds: number;
+  notes?: string;
+  orderNumber: number;
+};

@@ -7,9 +7,10 @@ import {
   TextInput,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { mockWorkoutState } from '../data/mockData';
+import { apiClient, TrainingDay, Exercise } from '../services/api';
 
 type ExerciseProgress = {
   exerciseId: string;
@@ -19,9 +20,9 @@ type ExerciseProgress = {
 
 export function WorkoutSessionScreen() {
   const { trainingDayId } = useLocalSearchParams<{ trainingDayId: string }>();
-  const trainingDay = mockWorkoutState.plans
-    .flatMap((plan) => plan.trainingDays)
-    .find((day) => day.id === trainingDayId);
+  const [trainingDay, setTrainingDay] = useState<TrainingDay | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Theme colors for WorkoutSessionScreen (keeping for now)
   const themeColors = {
@@ -101,6 +102,49 @@ export function WorkoutSessionScreen() {
 
   const currentExercise = trainingDay?.exercises[currentExerciseIndex];
   const totalExercises = trainingDay?.exercises.length ?? 0;
+
+  // Fetch training day data
+  useEffect(() => {
+    const fetchTrainingDay = async () => {
+      if (!trainingDayId) {
+        setError('Brak ID dnia treningowego');
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Get all plans to find the one containing this training day
+        const plans = await apiClient.getWorkoutPlans();
+        let foundDay: TrainingDay | null = null;
+        
+        for (const plan of plans) {
+          const days = await apiClient.getTrainingDays(plan.id);
+          const day = days.find(d => d.id === trainingDayId);
+          if (day) {
+            // Fetch exercises for this training day
+            const exercises = await apiClient.getExercises(day.id);
+            foundDay = { ...day, exercises };
+            break;
+          }
+        }
+        
+        if (foundDay) {
+          setTrainingDay(foundDay);
+        } else {
+          setError('Nie znaleziono dnia treningowego');
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Nie udało się załadować dnia treningowego');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTrainingDay();
+  }, [trainingDayId]);
 
   const progress = currentExercise
     ? exerciseProgress[currentExercise.id] || {
@@ -205,13 +249,52 @@ export function WorkoutSessionScreen() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  if (!trainingDay || !currentExercise) {
+  if (isLoading) {
     return (
       <SafeAreaView className="flex-1 bg-slate-900">
-        <View className="flex-1 justify-center items-center px-6">
-          <Text className="text-2xl font-bold text-white">
-            Nie znaleziono treningu
+        <View className="items-center justify-center flex-1 px-6">
+          <ActivityIndicator size="large" color="#AB8BFF" />
+          <Text className="mt-4 text-gray-400">Ładowanie treningu...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error || !trainingDay) {
+    return (
+      <SafeAreaView className="flex-1 bg-slate-900">
+        <View className="items-center justify-center flex-1 px-6">
+          <Text className="mb-4 text-2xl font-bold text-white">
+            {error || 'Nie znaleziono treningu'}
           </Text>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="px-6 py-3 bg-purple-500 rounded-lg"
+          >
+            <Text className="font-semibold text-center text-white">
+              Powrót do ekranu głównego
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!currentExercise || trainingDay.exercises.length === 0) {
+    return (
+      <SafeAreaView className="flex-1 bg-slate-900">
+        <View className="items-center justify-center flex-1 px-6">
+          <Text className="mb-4 text-2xl font-bold text-white">
+            Brak ćwiczeń w tym dniu treningowym
+          </Text>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="px-6 py-3 bg-purple-500 rounded-lg"
+          >
+            <Text className="font-semibold text-center text-white">
+              Powrót do ekranu głównego
+            </Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -615,7 +698,7 @@ export function WorkoutSessionScreen() {
                     alignItems: 'center',
                   }}
                 >
-                  <Text className="text-white font-semibold">
+                  <Text className="font-semibold text-white">
                     Rozpocznij
                   </Text>
                 </TouchableOpacity>
@@ -650,93 +733,11 @@ export function WorkoutSessionScreen() {
                   alignItems: 'center',
                 }}
               >
-                <Text className="text-white font-semibold">
+                <Text className="font-semibold text-white">
                   Zresetuj
                 </Text>
               </TouchableOpacity>
             </View>
-          </View>
-
-          {/* Navigation Buttons */}
-          <View
-            style={{
-              flexDirection: 'row',
-              gap: themeColors.spacing.md,
-              marginBottom: themeColors.spacing.lg,
-            }}
-          >
-            <TouchableOpacity
-              onPress={goToPreviousExercise}
-              disabled={currentExerciseIndex === 0}
-              style={{
-                flex: 1,
-                backgroundColor:
-                  currentExerciseIndex === 0
-                    ? themeColors.palette.surfaceMuted
-                    : themeColors.palette.surface,
-                borderRadius: themeColors.radii.md,
-                padding: themeColors.spacing.md,
-                alignItems: 'center',
-                borderWidth: 1,
-                borderColor: themeColors.palette.border,
-              }}
-            >
-              <Text
-                style={{
-                  ...themeColors.typography.button,
-                  color:
-                    currentExerciseIndex === 0
-                      ? themeColors.palette.text.muted
-                      : themeColors.palette.text.primary,
-                }}
-              >
-                ← Poprzednie
-              </Text>
-            </TouchableOpacity>
-            {currentExerciseIndex === totalExercises - 1 ? (
-              <TouchableOpacity
-                onPress={saveWorkout}
-                style={{
-                  flex: 1,
-                  backgroundColor: themeColors.palette.success,
-                  borderRadius: themeColors.radii.md,
-                  padding: themeColors.spacing.md,
-                  alignItems: 'center',
-                }}
-              >
-                <Text
-                  style={{
-                    ...themeColors.typography.button,
-                    color: themeColors.palette.background,
-                    fontSize: 16,
-                  }}
-                >
-                  Zapisz trening
-                </Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                onPress={goToNextExercise}
-                style={{
-                  flex: 1,
-                  backgroundColor: themeColors.palette.surface,
-                  borderRadius: themeColors.radii.md,
-                  padding: themeColors.spacing.md,
-                  alignItems: 'center',
-                  borderWidth: 1,
-                  borderColor: themeColors.palette.border,
-                }}
-              >
-                <Text
-                  style={{
-                    ...themeColors.typography.button,
-                    color: themeColors.palette.text.primary,
-                  }}
-                >
-                  Następne →
-                </Text>
-              </TouchableOpacity>
-            )}
           </View>
         </View>
       </ScrollView>

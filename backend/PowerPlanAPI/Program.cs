@@ -53,7 +53,9 @@ builder.Services.AddCors(options =>
                 "http://127.0.0.1:8081",
                 "http://127.0.0.1:19006",
                 "exp://localhost:8081",
-                "exp://127.0.0.1:8081"
+                "exp://127.0.0.1:8081",
+                "http://192.168.1.23:8081",  // Add your computer's IP for physical device
+                "exp://192.168.1.23:8081"   // Add your computer's IP for Expo Go
               )
               .AllowAnyMethod()
               .AllowAnyHeader()

@@ -62,4 +62,11 @@ export const API_ENDPOINTS = {
     DELETE: (dayId: string, exerciseId: string) =>
       `/api/trainingdays/${dayId}/exercises/${exerciseId}`,
   },
+  WORKOUT_SESSIONS: {
+    LIST: '/api/sessions',
+    HISTORY: '/api/sessions/history',
+    START: '/api/sessions/start',
+    COMPLETE: (id: string) => `/api/sessions/complete/${id}`,
+    SUGGEST_WEIGHTS: '/api/sessions/suggest-weights',
+  },
 } as const;

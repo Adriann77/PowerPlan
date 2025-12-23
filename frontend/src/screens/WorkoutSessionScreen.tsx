@@ -10,7 +10,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { apiClient, TrainingDay } from '../services/api';
+import { apiClient, TrainingDay, WorkoutPlan } from '../services/api';
+import { calculateCurrentWeek } from '../utils/week';
 
 type ExerciseProgress = {
   exerciseId: string;
@@ -21,6 +22,8 @@ type ExerciseProgress = {
 export function WorkoutSessionScreen() {
   const { trainingDayId } = useLocalSearchParams<{ trainingDayId: string }>();
   const [trainingDay, setTrainingDay] = useState<TrainingDay | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [weekNumber, setWeekNumber] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -116,9 +119,13 @@ export function WorkoutSessionScreen() {
         setIsLoading(true);
         setError(null);
 
+        setSessionId(null);
+        setWeekNumber(null);
+
         // Get all plans to find the one containing this training day
         const plans = await apiClient.getWorkoutPlans();
         let foundDay: TrainingDay | null = null;
+        let foundPlan: WorkoutPlan | null = null;
 
         for (const plan of plans) {
           const days = await apiClient.getTrainingDays(plan.id);
@@ -127,12 +134,50 @@ export function WorkoutSessionScreen() {
             // Fetch exercises for this training day
             const exercises = await apiClient.getExercises(day.id);
             foundDay = { ...day, exercises };
+            foundPlan = plan;
             break;
           }
         }
 
-        if (foundDay) {
+        if (foundDay && foundPlan) {
           setTrainingDay(foundDay);
+
+          const currentWeek = calculateCurrentWeek(
+            foundPlan.createdAt,
+            foundPlan.weekDuration,
+          );
+          setWeekNumber(currentWeek);
+
+          const session = await apiClient.startWorkoutSession({
+            workoutPlanId: foundPlan.id,
+            trainingDayId: foundDay.id,
+            weekNumber: currentWeek,
+          });
+          setSessionId(session.id);
+
+          const suggestions = await apiClient.getSuggestedWeights({
+            workoutPlanId: foundPlan.id,
+            trainingDayId: foundDay.id,
+            weekNumber: currentWeek,
+          });
+
+          const suggestedMap = new Map(
+            suggestions.map((s) => [s.exerciseId, s.suggestedWeight]),
+          );
+
+          const initialProgress: Record<string, ExerciseProgress> = {};
+          for (const ex of foundDay.exercises) {
+            const suggested = suggestedMap.get(ex.id);
+            initialProgress[ex.id] = {
+              exerciseId: ex.id,
+              completedSets: 0,
+              weight:
+                suggested === null || suggested === undefined
+                  ? ''
+                  : String(suggested),
+            };
+          }
+          setExerciseProgress(initialProgress);
         } else {
           setError('Nie znaleziono dnia treningowego');
         }
@@ -239,12 +284,47 @@ export function WorkoutSessionScreen() {
   };
 
   const saveWorkout = () => {
-    Alert.alert('Trening zapisany', 'Twój trening został pomyślnie zapisany!', [
-      {
-        text: 'OK',
-        onPress: () => router.back(),
-      },
-    ]);
+    if (!trainingDay || !sessionId) {
+      Alert.alert('Błąd', 'Nie udało się zapisać treningu (brak sesji).');
+      return;
+    }
+
+    (async () => {
+      try {
+        const payload = {
+          notes: null,
+          exerciseLogs: trainingDay.exercises.map((ex) => {
+            const p = exerciseProgress[ex.id];
+            const weightStr = (p?.weight ?? '').trim().replace(',', '.');
+            const parsed = weightStr.length ? Number(weightStr) : NaN;
+
+            return {
+              exerciseId: ex.id,
+              startingWeight: Number.isFinite(parsed) ? parsed : null,
+              isCompleted: (p?.completedSets ?? 0) >= ex.sets,
+            };
+          }),
+        };
+
+        await apiClient.completeWorkoutSession(sessionId, payload);
+
+        Alert.alert(
+          'Trening zapisany',
+          'Twój trening został pomyślnie zapisany!',
+          [
+            {
+              text: 'OK',
+              onPress: () => router.back(),
+            },
+          ],
+        );
+      } catch (e) {
+        Alert.alert(
+          'Błąd',
+          e instanceof Error ? e.message : 'Nie udało się zapisać treningu',
+        );
+      }
+    })();
   };
 
   const formatTime = (seconds: number) => {
@@ -347,7 +427,7 @@ export function WorkoutSessionScreen() {
             color: themeColors.palette.text.muted,
           }}
         >
-          Ćwiczenie {currentExerciseIndex + 1} z {totalExercises}
+          {weekNumber ? `Tydzień ${weekNumber} • ` : ''}Ćwiczenie {currentExerciseIndex + 1} z {totalExercises}
         </Text>
       </View>
 

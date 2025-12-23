@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useState } from 'react';
 import {
   Text,
   TouchableOpacity,
@@ -8,19 +8,19 @@ import {
   ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
-import { useAuth } from '../providers/AuthProvider';
+import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { apiClient, WorkoutPlan, TrainingDay } from '../services/api';
+import { calculateCurrentWeek } from '../utils/week';
 
 export function HomeScreen() {
-  const { currentUser } = useAuth();
   const [activePlan, setActivePlan] = useState<WorkoutPlan | null>(null);
   const [trainingDays, setTrainingDays] = useState<TrainingDay[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchActivePlanAndDays = async () => {
+  const fetchActivePlanAndDays = useCallback(async () => {
     try {
       setError(null);
       // Pobierz wszystkie plany i znajdź aktywny
@@ -44,11 +44,13 @@ export function HomeScreen() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  };
-
-  useEffect(() => {
-    fetchActivePlanAndDays();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchActivePlanAndDays();
+    }, [fetchActivePlanAndDays]),
+  );
 
   const onRefresh = () => {
     setIsRefreshing(true);
@@ -123,10 +125,13 @@ export function HomeScreen() {
               ) : null}
               <View className='flex-row gap-4'>
                 <Text className='text-sm text-purple-100'>
-                  🗓️ {activePlan.weekDuration} tygodni
+                   {activePlan.weekDuration} tygodni
                 </Text>
                 <Text className='text-sm text-purple-100'>
-                  💪 {activePlan.trainingDaysCount} dni
+                  📍 Tydzień {calculateCurrentWeek(activePlan.createdAt, activePlan.weekDuration)}
+                </Text>
+                <Text className='text-sm text-purple-100'>
+                   {activePlan.trainingDaysCount} dni
                 </Text>
               </View>
             </View>

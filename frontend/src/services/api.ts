@@ -37,6 +37,53 @@ type MeResponse = {
   username: string;
 };
 
+export type WorkoutSessionExerciseLog = {
+  id: string;
+  exerciseId: string;
+  exerciseName: string;
+  startingWeight?: number | null;
+  isCompleted: boolean;
+  notes?: string | null;
+  feeling?: number | null;
+  nextPreference?: 'GAIN' | 'STAY' | 'LOWER' | null;
+};
+
+export type WorkoutSession = {
+  id: string;
+  workoutPlanId: string;
+  trainingDayId: string;
+  weekNumber: number;
+  isCompleted: boolean;
+  completedAt?: string | null;
+  notes?: string | null;
+  workoutPlanName: string;
+  trainingDayName: string;
+  exerciseLogs: WorkoutSessionExerciseLog[];
+};
+
+export type StartWorkoutSessionRequest = {
+  workoutPlanId: string;
+  trainingDayId: string;
+  weekNumber: number;
+};
+
+export type CompleteWorkoutSessionRequest = {
+  notes?: string | null;
+  exerciseLogs: {
+    exerciseId: string;
+    startingWeight?: number | null;
+    isCompleted: boolean;
+    notes?: string | null;
+    feeling?: number | null;
+    nextPreference?: 'GAIN' | 'STAY' | 'LOWER' | null;
+  }[];
+};
+
+export type ExerciseWeightSuggestion = {
+  exerciseId: string;
+  suggestedWeight?: number | null;
+};
+
 class ApiClient {
   private baseUrl: string;
 
@@ -336,6 +383,54 @@ class ApiClient {
     await this.request(API_ENDPOINTS.EXERCISES.DELETE(dayId, exerciseId), {
       method: 'DELETE',
     });
+  }
+
+  // Workout Sessions
+  async startWorkoutSession(data: StartWorkoutSessionRequest): Promise<WorkoutSession> {
+    return this.request<WorkoutSession>(API_ENDPOINTS.WORKOUT_SESSIONS.START, {
+      method: 'POST',
+      body: JSON.stringify({
+        workoutPlanId: data.workoutPlanId,
+        trainingDayId: data.trainingDayId,
+        weekNumber: data.weekNumber,
+        isCompleted: false,
+        notes: null,
+      }),
+    });
+  }
+
+  async completeWorkoutSession(
+    sessionId: string,
+    data: CompleteWorkoutSessionRequest,
+  ): Promise<WorkoutSession> {
+    return this.request<WorkoutSession>(
+      API_ENDPOINTS.WORKOUT_SESSIONS.COMPLETE(sessionId),
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      },
+    );
+  }
+
+  async getWorkoutSessionHistory(workoutPlanId?: string): Promise<WorkoutSession[]> {
+    const qs = workoutPlanId ? `?workoutPlanId=${encodeURIComponent(workoutPlanId)}` : '';
+    return this.request<WorkoutSession[]>(`${API_ENDPOINTS.WORKOUT_SESSIONS.HISTORY}${qs}`, {
+      method: 'GET',
+    });
+  }
+
+  async getSuggestedWeights(params: {
+    workoutPlanId: string;
+    trainingDayId: string;
+    weekNumber: number;
+  }): Promise<ExerciseWeightSuggestion[]> {
+    const qs = `?workoutPlanId=${encodeURIComponent(params.workoutPlanId)}` +
+      `&trainingDayId=${encodeURIComponent(params.trainingDayId)}` +
+      `&weekNumber=${encodeURIComponent(String(params.weekNumber))}`;
+    return this.request<ExerciseWeightSuggestion[]>(
+      `${API_ENDPOINTS.WORKOUT_SESSIONS.SUGGEST_WEIGHTS}${qs}`,
+      { method: 'GET' },
+    );
   }
 }
 

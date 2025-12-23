@@ -13,13 +13,13 @@ const getApiBaseUrl = () => {
   if (__DEV__) {
     // Development mode - change this based on your setup
     // For iOS Simulator:
-    return 'http://localhost:5226';
+    // return 'http://localhost:5226';
 
     // For Android Emulator, uncomment this instead:
     // return 'http://10.0.2.2:5226';
 
-    // For physical device, replace with your computer's IP:
-    // return 'http://192.168.1.100:5226';
+    // For physical device, use your computer's IP:
+    return 'http://192.168.1.23:5226';
   }
 
   // Production mode - replace with your production API URL
@@ -45,15 +45,21 @@ export const API_ENDPOINTS = {
   TRAINING_DAYS: {
     LIST: (planId: string) => `/api/workoutplans/${planId}/trainingdays`,
     CREATE: (planId: string) => `/api/workoutplans/${planId}/trainingdays`,
-    GET: (planId: string, dayId: string) => `/api/workoutplans/${planId}/trainingdays/${dayId}`,
-    UPDATE: (planId: string, dayId: string) => `/api/workoutplans/${planId}/trainingdays/${dayId}`,
-    DELETE: (planId: string, dayId: string) => `/api/workoutplans/${planId}/trainingdays/${dayId}`,
+    GET: (planId: string, dayId: string) =>
+      `/api/workoutplans/${planId}/trainingdays/${dayId}`,
+    UPDATE: (planId: string, dayId: string) =>
+      `/api/workoutplans/${planId}/trainingdays/${dayId}`,
+    DELETE: (planId: string, dayId: string) =>
+      `/api/workoutplans/${planId}/trainingdays/${dayId}`,
   },
   EXERCISES: {
     LIST: (dayId: string) => `/api/trainingdays/${dayId}/exercises`,
     CREATE: (dayId: string) => `/api/trainingdays/${dayId}/exercises`,
-    GET: (dayId: string, exerciseId: string) => `/api/trainingdays/${dayId}/exercises/${exerciseId}`,
-    UPDATE: (dayId: string, exerciseId: string) => `/api/trainingdays/${dayId}/exercises/${exerciseId}`,
-    DELETE: (dayId: string, exerciseId: string) => `/api/trainingdays/${dayId}/exercises/${exerciseId}`,
+    GET: (dayId: string, exerciseId: string) =>
+      `/api/trainingdays/${dayId}/exercises/${exerciseId}`,
+    UPDATE: (dayId: string, exerciseId: string) =>
+      `/api/trainingdays/${dayId}/exercises/${exerciseId}`,
+    DELETE: (dayId: string, exerciseId: string) =>
+      `/api/trainingdays/${dayId}/exercises/${exerciseId}`,
   },
 } as const;

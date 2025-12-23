@@ -16,7 +16,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-import { apiClient, TrainingDay, Exercise } from '../../src/services/api';
+import { apiClient, TrainingDay } from '../../src/services/api';
 
 export default function ManagePlanScreen() {
   const { planId } = useLocalSearchParams<{ planId: string }>();
@@ -36,6 +36,21 @@ export default function ManagePlanScreen() {
     restSeconds: 90,
     notes: '',
   });
+
+  const formatTempo = (value: string) => {
+    // Remove all non-numeric characters
+    const numbers = value.replace(/\D/g, '');
+    
+    // Take only first 4 digits
+    const digits = numbers.slice(0, 4);
+    
+    // Format with dashes
+    if (digits.length === 0) return '';
+    if (digits.length === 1) return digits;
+    if (digits.length === 2) return `${digits[0]}-${digits[1]}`;
+    if (digits.length === 3) return `${digits[0]}-${digits[1]}-${digits[2]}`;
+    return `${digits[0]}-${digits[1]}-${digits[2]}-${digits[3]}`;
+  };
 
   useEffect(() => {
     if (planId) {
@@ -148,9 +163,9 @@ export default function ManagePlanScreen() {
             onPress={goBackToPlans}
             className='self-start mb-4'
           >
-            <Text className='text-purple-400 text-base'>← Wróć do Planów</Text>
+            <Text className='text-base text-purple-400'>← Wróć do Planów</Text>
           </TouchableOpacity>
-          <Text className='text-3xl font-bold text-white mb-2'>
+          <Text className='mb-2 text-3xl font-bold text-white'>
             Zarządzaj Planem
           </Text>
         </View>
@@ -158,19 +173,22 @@ export default function ManagePlanScreen() {
         {/* Content */}
         <View className='flex-1 px-6 pt-4'>
           {isLoading ? (
-            <View className='flex-1 justify-center items-center'>
-              <ActivityIndicator size='large' color='#AB8BFF' />
+            <View className='items-center justify-center flex-1'>
+              <ActivityIndicator
+                size='large'
+                color='#AB8BFF'
+              />
             </View>
           ) : trainingDays.length === 0 ? (
-            <View className='flex-1 justify-center items-center'>
-              <Text className='text-gray-400 text-lg mb-6 text-center'>
+            <View className='items-center justify-center flex-1'>
+              <Text className='mb-6 text-lg text-center text-gray-400'>
                 Brak dni treningowych
               </Text>
               <TouchableOpacity
                 onPress={() => setShowAddDayModal(true)}
-                className='bg-purple-600 rounded-lg px-6 py-3'
+                className='px-6 py-3 bg-purple-600 rounded-lg'
               >
-                <Text className='text-white font-semibold'>
+                <Text className='font-semibold text-white'>
                   Dodaj Pierwszy Dzień Treningowy
                 </Text>
               </TouchableOpacity>
@@ -182,23 +200,23 @@ export default function ManagePlanScreen() {
               contentContainerStyle={{ paddingBottom: 100 }}
               ItemSeparatorComponent={() => <View className='h-4' />}
               renderItem={({ item }) => (
-                <View className='bg-slate-800 rounded-xl p-6 border border-gray-600 mb-4'>
-                  <View className='flex-row justify-between items-center mb-4'>
+                <View className='p-6 mb-4 border border-gray-600 bg-slate-800 rounded-xl'>
+                  <View className='flex-row items-center justify-between mb-4'>
                     <Text className='text-xl font-bold text-white'>
                       {item.name}
                     </Text>
                     <TouchableOpacity
                       onPress={() => openAddExerciseModal(item.id)}
-                      className='bg-green-600 rounded-lg px-3 py-1'
+                      className='px-3 py-1 bg-green-600 rounded-lg'
                     >
-                      <Text className='text-white font-semibold text-sm'>
+                      <Text className='text-sm font-semibold text-white'>
                         + Ćwiczenie
                       </Text>
                     </TouchableOpacity>
                   </View>
 
                   {item.exercises.length === 0 ? (
-                    <Text className='text-gray-400 text-center py-4'>
+                    <Text className='py-4 text-center text-gray-400'>
                       Brak ćwiczeń w tym dniu
                     </Text>
                   ) : (
@@ -206,26 +224,26 @@ export default function ManagePlanScreen() {
                       {item.exercises.map((exercise) => (
                         <View
                           key={exercise.id}
-                          className='bg-slate-700 rounded-lg p-4 mb-2'
+                          className='p-4 mb-2 rounded-lg bg-slate-700'
                         >
                           <View className='flex-row items-center mb-2'>
-                            <View className='bg-purple-600 w-6 h-6 rounded-full justify-center items-center mr-3'>
-                              <Text className='text-slate-900 font-semibold text-xs'>
+                            <View className='items-center justify-center w-6 h-6 mr-3 bg-purple-600 rounded-full'>
+                              <Text className='text-xs font-semibold text-slate-900'>
                                 {exercise.orderNumber}
                               </Text>
                             </View>
-                            <Text className='text-white font-semibold flex-1'>
+                            <Text className='flex-1 font-semibold text-white'>
                               {exercise.name}
                             </Text>
                           </View>
                           <View className='flex-row flex-wrap'>
-                            <Text className='text-gray-300 text-sm mr-4'>
+                            <Text className='mr-4 text-sm text-gray-300'>
                               Serie: {exercise.sets}
                             </Text>
-                            <Text className='text-gray-300 text-sm mr-4'>
+                            <Text className='mr-4 text-sm text-gray-300'>
                               Powtórzenia: {exercise.reps}
                             </Text>
-                            <Text className='text-gray-300 text-sm'>
+                            <Text className='text-sm text-gray-300'>
                               Tempo: {exercise.tempo}
                             </Text>
                           </View>
@@ -238,9 +256,9 @@ export default function ManagePlanScreen() {
               ListFooterComponent={() => (
                 <TouchableOpacity
                   onPress={() => setShowAddDayModal(true)}
-                  className='bg-slate-700 rounded-xl p-6 items-center border-2 border-dashed border-gray-600'
+                  className='items-center p-6 border-2 border-gray-600 border-dashed bg-slate-700 rounded-xl'
                 >
-                  <Text className='text-gray-400 font-semibold text-lg'>
+                  <Text className='text-lg font-semibold text-gray-400'>
                     + Dodaj Dzień Treningowy
                   </Text>
                 </TouchableOpacity>
@@ -261,12 +279,12 @@ export default function ManagePlanScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           className='flex-1'
         >
-          <View className='flex-1 justify-start bg-black bg-opacity-50'>
+          <View className='justify-start flex-1 bg-black bg-opacity-50'>
             <View
-              className='bg-slate-800 rounded-b-3xl p-6'
+              className='p-6 bg-slate-800 rounded-b-3xl'
               style={{ marginTop: insets.top + 10 }}
             >
-              <Text className='text-xl font-bold text-white mb-4'>
+              <Text className='mb-4 text-xl font-bold text-white'>
                 Dodaj Dzień Treningowy
               </Text>
               <TextInput
@@ -274,26 +292,29 @@ export default function ManagePlanScreen() {
                 onChangeText={setNewDayName}
                 placeholder='Nazwa dnia (np. Dzień 1 - Klatka)'
                 placeholderTextColor='#9CA3AF'
-                className='bg-slate-700 border border-gray-600 rounded-lg px-4 py-3 text-white text-lg mb-6'
+                className='px-4 py-3 mb-6 text-lg text-white border border-gray-600 rounded-lg bg-slate-700'
                 autoFocus
               />
               <View className='flex-row space-x-4'>
                 <TouchableOpacity
                   onPress={() => setShowAddDayModal(false)}
-                  className='flex-1 bg-gray-600 rounded-lg py-3 items-center mr-2'
+                  className='items-center flex-1 py-3 mr-2 bg-gray-600 rounded-lg'
                   disabled={isSaving}
                 >
-                  <Text className='text-white font-semibold'>Anuluj</Text>
+                  <Text className='font-semibold text-white'>Anuluj</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={addTrainingDay}
-                  className='flex-1 bg-purple-600 rounded-lg py-3 items-center ml-2'
+                  className='items-center flex-1 py-3 ml-2 bg-purple-600 rounded-lg'
                   disabled={isSaving}
                 >
                   {isSaving ? (
-                    <ActivityIndicator size='small' color='#FFF' />
+                    <ActivityIndicator
+                      size='small'
+                      color='#FFF'
+                    />
                   ) : (
-                    <Text className='text-white font-semibold'>Dodaj</Text>
+                    <Text className='font-semibold text-white'>Dodaj</Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -313,17 +334,17 @@ export default function ManagePlanScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           className='flex-1'
         >
-          <View className='flex-1 justify-start bg-black bg-opacity-50'>
+          <View className='justify-start flex-1 bg-black bg-opacity-50'>
             <View
-              className='bg-slate-800 rounded-b-3xl p-6 max-h-4/5 h-screen'
+              className='h-screen p-6 bg-slate-800 rounded-b-3xl max-h-4/5'
               style={{ marginTop: insets.top + 10 }}
             >
-              <Text className='text-xl font-bold text-white mb-4'>
+              <Text className='mb-4 text-xl font-bold text-white'>
                 Dodaj Ćwiczenie
               </Text>
               <View className='flex flex-col gap-4'>
                 <View>
-                  <Text className='text-gray-400 text-sm mb-1'>
+                  <Text className='mb-1 text-sm text-gray-400'>
                     Nazwa ćwiczenia
                   </Text>
                   <TextInput
@@ -333,27 +354,35 @@ export default function ManagePlanScreen() {
                     }
                     placeholder='np. Wyciskanie sztangi na ławce poziomej'
                     placeholderTextColor='#9CA3AF'
-                    className='bg-slate-700 border border-gray-600 rounded-lg px-4 py-3 text-white'
+                    className='px-4 py-3 text-white border border-gray-600 rounded-lg bg-slate-700'
                   />
                 </View>
 
-                <View className='flex-row space-x-4 gap-5'>
+                <View className='flex-row gap-5 space-x-4'>
                   <View className='flex-1'>
-                    <Text className='text-gray-400 text-sm mb-1'>Serie</Text>
+                    <Text className='mb-1 text-sm text-gray-400'>Serie</Text>
                     <TextInput
-                      value={newExercise.sets.toString()}
-                      onChangeText={(value) =>
-                        setNewExercise((prev) => ({
-                          ...prev,
-                          sets: parseInt(value) || 1,
-                        }))
-                      }
+                      value={newExercise.sets === 0 ? '' : newExercise.sets.toString()}
+                      onChangeText={(value) => {
+                        if (value === '') {
+                          setNewExercise((prev) => ({
+                            ...prev,
+                            sets: 0,
+                          }));
+                        } else {
+                          const numValue = parseInt(value);
+                          setNewExercise((prev) => ({
+                            ...prev,
+                            sets: isNaN(numValue) ? 0 : numValue,
+                          }));
+                        }
+                      }}
                       keyboardType='numeric'
-                      className='bg-slate-700 border border-gray-600 rounded-lg px-4 py-3 text-white'
+                      className='px-4 py-3 text-white border border-gray-600 rounded-lg bg-slate-700'
                     />
                   </View>
                   <View className='flex-1 '>
-                    <Text className='text-gray-400 text-sm mb-1'>
+                    <Text className='mb-1 text-sm text-gray-400'>
                       Powtórzenia
                     </Text>
                     <TextInput
@@ -363,44 +392,70 @@ export default function ManagePlanScreen() {
                       }
                       placeholder='np. 8-12'
                       placeholderTextColor='#9CA3AF'
-                      className='bg-slate-700 border border-gray-600 rounded-lg px-4 py-3 text-white'
+                      keyboardType="decimal-pad"
+                      className='px-4 py-3 text-white border border-gray-600 rounded-lg bg-slate-700'
                     />
                   </View>
                 </View>
 
-                <View className='flex-row space-x-4 gap-5'>
+                <View className='flex-row gap-5 space-x-4'>
                   <View className='flex-1'>
-                    <Text className='text-gray-400 text-sm mb-1'>Tempo</Text>
+                    <View className='flex-row items-center mb-1'>
+                      <Text className='text-sm text-gray-400'>Tempo</Text>
+                      <TouchableOpacity
+                        onPress={() => {
+                          Alert.alert(
+                            "Metodologia Tempo",
+                            "Tempo ćwiczenia określa czas trwania każdej fazy ruchu:\n\n• Pierwsza cyfra: FAZA KONCENTRYCZNA (opuszczanie ciężaru)\n• Druga cyfra: PAUZA NA DOLE (przerwa w pozycji końcowej)\n• Trzecia cyfra: FAZA EKSCENTRYCZNA (podnoszenie ciężaru)\n• Czwarta cyfra: PAUZA NA GÓRZE (przerwa w pozycji wyjściowej)\n\nPrzykład: 3-1-1-0 oznacza 3s w dół, 1s pauza na dole, 1s w górę, brak pauzy na górze.",
+                            [{ text: "Rozumiem" }]
+                          );
+                        }}
+                        className='ml-2 p-1 rounded-full bg-blue-500 bg-opacity-20'
+                      >
+                        <Text className='text-sm text-blue-400 font-bold'>?</Text>
+                      </TouchableOpacity>
+                    </View>
                     <TextInput
                       value={newExercise.tempo}
-                      onChangeText={(value) =>
-                        setNewExercise((prev) => ({ ...prev, tempo: value }))
-                      }
+                      onChangeText={(value) => {
+                        const formatted = formatTempo(value);
+                        setNewExercise((prev) => ({ ...prev, tempo: formatted }));
+                      }}
                       placeholder='3-1-1-0'
                       placeholderTextColor='#9CA3AF'
-                      className='bg-slate-700 border border-gray-600 rounded-lg px-4 py-3 text-white'
+                      keyboardType='numeric'
+                      maxLength={7} // 4 digits + 3 dashes
+                      className='px-4 py-3 text-white border border-gray-600 rounded-lg bg-slate-700'
                     />
                   </View>
                   <View className='flex-1'>
-                    <Text className='text-gray-400 text-sm mb-1'>
+                    <Text className='mb-1 text-sm text-gray-400'>
                       Odpoczynek (s)
                     </Text>
                     <TextInput
-                      value={newExercise.restSeconds.toString()}
-                      onChangeText={(value) =>
-                        setNewExercise((prev) => ({
-                          ...prev,
-                          restSeconds: parseInt(value) || 90,
-                        }))
-                      }
-                      keyboardType='numeric'
-                      className='bg-slate-700 border border-gray-600 rounded-lg px-4 py-3 text-white'
+                      value={newExercise.restSeconds === 0 ? '' : newExercise.restSeconds.toString()}
+                      onChangeText={(value) => {
+                        if (value === '') {
+                          setNewExercise((prev) => ({
+                            ...prev,
+                            restSeconds: 0,
+                          }));
+                        } else {
+                          const numValue = parseInt(value);
+                          setNewExercise((prev) => ({
+                            ...prev,
+                            restSeconds: isNaN(numValue) ? 0 : numValue,
+                          }));
+                        }
+                      }}
+                      keyboardType='decimal-pad'
+                      className='px-4 py-3 text-white border border-gray-600 rounded-lg bg-slate-700'
                     />
                   </View>
                 </View>
 
                 <View>
-                  <Text className='text-gray-400 text-sm mb-1'>
+                  <Text className='mb-1 text-sm text-gray-400'>
                     Notatki (opcjonalne)
                   </Text>
                   <TextInput
@@ -412,29 +467,32 @@ export default function ManagePlanScreen() {
                     placeholderTextColor='#9CA3AF'
                     multiline
                     numberOfLines={2}
-                    className='bg-slate-700 border border-gray-600 rounded-lg px-4 py-3 text-white'
+                    className='px-4 py-3 text-white border border-gray-600 rounded-lg bg-slate-700'
                     textAlignVertical='top'
                   />
                 </View>
               </View>
 
-              <View className='flex-row space-x-4 mt-6'>
+              <View className='flex-row mt-6 space-x-4'>
                 <TouchableOpacity
                   onPress={() => setShowAddExerciseModal(false)}
-                  className='flex-1 bg-gray-600 rounded-lg py-3 items-center mr-2'
+                  className='items-center flex-1 py-3 mr-2 bg-gray-600 rounded-lg'
                   disabled={isSaving}
                 >
-                  <Text className='text-white font-semibold'>Anuluj</Text>
+                  <Text className='font-semibold text-white'>Anuluj</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={addExercise}
-                  className='flex-1 bg-purple-600 rounded-lg py-3 items-center ml-2'
+                  className='items-center flex-1 py-3 ml-2 bg-purple-600 rounded-lg'
                   disabled={isSaving}
                 >
                   {isSaving ? (
-                    <ActivityIndicator size='small' color='#FFF' />
+                    <ActivityIndicator
+                      size='small'
+                      color='#FFF'
+                    />
                   ) : (
-                    <Text className='text-white font-semibold'>Dodaj</Text>
+                    <Text className='font-semibold text-white'>Dodaj</Text>
                   )}
                 </TouchableOpacity>
               </View>

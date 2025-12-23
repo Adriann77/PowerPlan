@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { apiClient, TrainingDay, Exercise } from '../services/api';
+import { apiClient, TrainingDay } from '../services/api';
 
 type ExerciseProgress = {
   exerciseId: string;
@@ -115,14 +115,14 @@ export function WorkoutSessionScreen() {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         // Get all plans to find the one containing this training day
         const plans = await apiClient.getWorkoutPlans();
         let foundDay: TrainingDay | null = null;
-        
+
         for (const plan of plans) {
           const days = await apiClient.getTrainingDays(plan.id);
-          const day = days.find(d => d.id === trainingDayId);
+          const day = days.find((d) => d.id === trainingDayId);
           if (day) {
             // Fetch exercises for this training day
             const exercises = await apiClient.getExercises(day.id);
@@ -130,14 +130,18 @@ export function WorkoutSessionScreen() {
             break;
           }
         }
-        
+
         if (foundDay) {
           setTrainingDay(foundDay);
         } else {
           setError('Nie znaleziono dnia treningowego');
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Nie udało się załadować dnia treningowego');
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Nie udało się załadować dnia treningowego',
+        );
       } finally {
         setIsLoading(false);
       }
@@ -251,10 +255,13 @@ export function WorkoutSessionScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 bg-slate-900">
-        <View className="items-center justify-center flex-1 px-6">
-          <ActivityIndicator size="large" color="#AB8BFF" />
-          <Text className="mt-4 text-gray-400">Ładowanie treningu...</Text>
+      <SafeAreaView className='flex-1 bg-slate-900'>
+        <View className='items-center justify-center flex-1 px-6'>
+          <ActivityIndicator
+            size='large'
+            color='#AB8BFF'
+          />
+          <Text className='mt-4 text-gray-400'>Ładowanie treningu...</Text>
         </View>
       </SafeAreaView>
     );
@@ -262,16 +269,16 @@ export function WorkoutSessionScreen() {
 
   if (error || !trainingDay) {
     return (
-      <SafeAreaView className="flex-1 bg-slate-900">
-        <View className="items-center justify-center flex-1 px-6">
-          <Text className="mb-4 text-2xl font-bold text-white">
+      <SafeAreaView className='flex-1 bg-slate-900'>
+        <View className='items-center justify-center flex-1 px-6'>
+          <Text className='mb-4 text-2xl font-bold text-white'>
             {error || 'Nie znaleziono treningu'}
           </Text>
           <TouchableOpacity
             onPress={() => router.back()}
-            className="px-6 py-3 bg-purple-500 rounded-lg"
+            className='px-6 py-3 bg-purple-500 rounded-lg'
           >
-            <Text className="font-semibold text-center text-white">
+            <Text className='font-semibold text-center text-white'>
               Powrót do ekranu głównego
             </Text>
           </TouchableOpacity>
@@ -282,16 +289,16 @@ export function WorkoutSessionScreen() {
 
   if (!currentExercise || trainingDay.exercises.length === 0) {
     return (
-      <SafeAreaView className="flex-1 bg-slate-900">
-        <View className="items-center justify-center flex-1 px-6">
-          <Text className="mb-4 text-2xl font-bold text-white">
+      <SafeAreaView className='flex-1 bg-slate-900'>
+        <View className='items-center justify-center flex-1 px-6'>
+          <Text className='mb-4 text-2xl font-bold text-white'>
             Brak ćwiczeń w tym dniu treningowym
           </Text>
           <TouchableOpacity
             onPress={() => router.back()}
-            className="px-6 py-3 bg-purple-500 rounded-lg"
+            className='px-6 py-3 bg-purple-500 rounded-lg'
           >
-            <Text className="font-semibold text-center text-white">
+            <Text className='font-semibold text-center text-white'>
               Powrót do ekranu głównego
             </Text>
           </TouchableOpacity>
@@ -301,9 +308,7 @@ export function WorkoutSessionScreen() {
   }
 
   return (
-    <SafeAreaView
-        style={{ flex: 1, backgroundColor: themeColors.background }}
-    >
+    <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background }}>
       {/* Fixed Header */}
       <View
         style={{
@@ -316,17 +321,21 @@ export function WorkoutSessionScreen() {
       >
         <TouchableOpacity
           onPress={() => router.back()}
-          style={{ alignSelf: 'flex-start', marginBottom: themeColors.spacing.md }}
+          style={{
+            alignSelf: 'flex-start',
+            marginBottom: themeColors.spacing.md,
+          }}
         >
           <Text
-            style={{ ...themeColors.typography.body, color: themeColors.palette.primary }}
+            style={{
+              color: themeColors.palette.primary,
+            }}
           >
             ← Wróć
           </Text>
         </TouchableOpacity>
         <Text
           style={{
-            ...themeColors.typography.heading1,
             color: themeColors.palette.text.primary,
             marginBottom: themeColors.spacing.xs,
           }}
@@ -335,7 +344,6 @@ export function WorkoutSessionScreen() {
         </Text>
         <Text
           style={{
-            ...themeColors.typography.caption,
             color: themeColors.palette.text.muted,
           }}
         >
@@ -345,7 +353,6 @@ export function WorkoutSessionScreen() {
 
       {/* Scrollable Exercise Content */}
       <ScrollView style={{ flex: 1 }}>
-
         {/* Exercise Info */}
         <View style={{ padding: themeColors.spacing.lg }}>
           <View
@@ -376,7 +383,7 @@ export function WorkoutSessionScreen() {
               >
                 <Text
                   style={[
-                    (themeColors.typography.button as any),
+                    themeColors.typography.button as any,
                     {
                       color: themeColors.palette.background,
                       fontSize: 18,
@@ -388,7 +395,6 @@ export function WorkoutSessionScreen() {
               </View>
               <Text
                 style={{
-                  ...themeColors.typography.heading2,
                   color: themeColors.palette.text.primary,
                   flex: 1,
                 }}
@@ -405,10 +411,11 @@ export function WorkoutSessionScreen() {
                 marginBottom: themeColors.spacing.md,
               }}
             >
-              <View style={{ width: '50%', marginBottom: themeColors.spacing.sm }}>
+              <View
+                style={{ width: '50%', marginBottom: themeColors.spacing.sm }}
+              >
                 <Text
                   style={{
-                    ...themeColors.typography.caption,
                     color: themeColors.palette.text.muted,
                     marginBottom: 4,
                   }}
@@ -425,10 +432,11 @@ export function WorkoutSessionScreen() {
                   {currentExercise.sets}
                 </Text>
               </View>
-              <View style={{ width: '50%', marginBottom: themeColors.spacing.sm }}>
+              <View
+                style={{ width: '50%', marginBottom: themeColors.spacing.sm }}
+              >
                 <Text
                   style={{
-                    ...themeColors.typography.caption,
                     color: themeColors.palette.text.muted,
                     marginBottom: 4,
                   }}
@@ -437,7 +445,6 @@ export function WorkoutSessionScreen() {
                 </Text>
                 <Text
                   style={{
-                    ...themeColors.typography.body,
                     color: themeColors.palette.text.primary,
                     fontWeight: '600' as const,
                   }}
@@ -448,7 +455,6 @@ export function WorkoutSessionScreen() {
               <View style={{ width: '50%' }}>
                 <Text
                   style={{
-                    ...themeColors.typography.caption,
                     color: themeColors.palette.text.muted,
                     marginBottom: 4,
                   }}
@@ -468,7 +474,6 @@ export function WorkoutSessionScreen() {
               <View style={{ width: '50%' }}>
                 <Text
                   style={{
-                    ...themeColors.typography.caption,
                     color: themeColors.palette.text.muted,
                     marginBottom: 4,
                   }}
@@ -497,7 +502,6 @@ export function WorkoutSessionScreen() {
               >
                 <Text
                   style={{
-                    ...themeColors.typography.caption,
                     color: themeColors.palette.text.muted,
                     marginBottom: 4,
                   }}
@@ -506,7 +510,6 @@ export function WorkoutSessionScreen() {
                 </Text>
                 <Text
                   style={{
-                    ...themeColors.typography.body,
                     color: themeColors.palette.text.secondary,
                   }}
                 >
@@ -527,7 +530,6 @@ export function WorkoutSessionScreen() {
           >
             <Text
               style={{
-                ...themeColors.typography.heading3,
                 color: themeColors.palette.text.primary,
                 marginBottom: themeColors.spacing.md,
               }}
@@ -571,7 +573,6 @@ export function WorkoutSessionScreen() {
             >
               <Text
                 style={{
-                  ...themeColors.typography.heading3,
                   color: themeColors.palette.text.primary,
                 }}
               >
@@ -579,7 +580,6 @@ export function WorkoutSessionScreen() {
               </Text>
               <Text
                 style={{
-                  ...themeColors.typography.heading3,
                   color: themeColors.palette.primary,
                 }}
               >
@@ -589,7 +589,10 @@ export function WorkoutSessionScreen() {
 
             {/* Series indicators */}
             <View
-              style={{ flexDirection: 'row', marginBottom: themeColors.spacing.lg }}
+              style={{
+                flexDirection: 'row',
+                marginBottom: themeColors.spacing.lg,
+              }}
             >
               {Array.from({ length: currentExercise.sets }).map((_, index) => (
                 <View
@@ -602,7 +605,9 @@ export function WorkoutSessionScreen() {
                         ? themeColors.palette.success
                         : themeColors.palette.surfaceMuted,
                     marginRight:
-                      index < currentExercise.sets - 1 ? themeColors.spacing.xs : 0,
+                      index < currentExercise.sets - 1
+                        ? themeColors.spacing.xs
+                        : 0,
                     borderRadius: themeColors.radii.sm,
                   }}
                 />
@@ -621,7 +626,6 @@ export function WorkoutSessionScreen() {
               >
                 <Text
                   style={{
-                    ...themeColors.typography.button,
                     color: themeColors.palette.background,
                   }}
                 >
@@ -639,7 +643,6 @@ export function WorkoutSessionScreen() {
               >
                 <Text
                   style={{
-                    ...themeColors.typography.button,
                     color: themeColors.palette.background,
                   }}
                 >
@@ -660,7 +663,6 @@ export function WorkoutSessionScreen() {
           >
             <Text
               style={{
-                ...themeColors.typography.heading3,
                 color: themeColors.palette.text.primary,
                 marginBottom: themeColors.spacing.md,
               }}
@@ -669,7 +671,10 @@ export function WorkoutSessionScreen() {
             </Text>
 
             <View
-              style={{ alignItems: 'center', marginBottom: themeColors.spacing.md }}
+              style={{
+                alignItems: 'center',
+                marginBottom: themeColors.spacing.md,
+              }}
             >
               <Text
                 style={{
@@ -698,9 +703,7 @@ export function WorkoutSessionScreen() {
                     alignItems: 'center',
                   }}
                 >
-                  <Text className="font-semibold text-white">
-                    Rozpocznij
-                  </Text>
+                  <Text className='font-semibold text-white'>Rozpocznij</Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
@@ -715,7 +718,6 @@ export function WorkoutSessionScreen() {
                 >
                   <Text
                     style={{
-                      ...themeColors.typography.button,
                       color: themeColors.palette.background,
                     }}
                   >
@@ -733,9 +735,7 @@ export function WorkoutSessionScreen() {
                   alignItems: 'center',
                 }}
               >
-                <Text className="font-semibold text-white">
-                  Zresetuj
-                </Text>
+                <Text className='font-semibold text-white'>Zresetuj</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -775,7 +775,6 @@ export function WorkoutSessionScreen() {
           >
             <Text
               style={{
-                ...themeColors.typography.button,
                 color:
                   currentExerciseIndex === 0
                     ? themeColors.palette.text.muted
@@ -798,7 +797,6 @@ export function WorkoutSessionScreen() {
             >
               <Text
                 style={{
-                  ...themeColors.typography.button,
                   color: themeColors.palette.background,
                   fontSize: 16,
                 }}
@@ -821,7 +819,6 @@ export function WorkoutSessionScreen() {
             >
               <Text
                 style={{
-                  ...themeColors.typography.button,
                   color: themeColors.palette.text.primary,
                 }}
               >

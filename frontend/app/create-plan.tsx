@@ -63,7 +63,9 @@ export default function CreatePlanScreen() {
       } catch (error) {
         Alert.alert(
           'Błąd',
-          error instanceof Error ? error.message : 'Nie udało się utworzyć planu',
+          error instanceof Error
+            ? error.message
+            : 'Nie udało się utworzyć planu',
         );
       } finally {
         setIsCreating(false);
@@ -82,10 +84,10 @@ export default function CreatePlanScreen() {
       case 1:
         return (
           <View className='flex-1 px-6'>
-            <Text className='text-2xl font-bold text-white mb-2 mt-6'>
+            <Text className='mt-6 mb-2 text-2xl font-bold text-white'>
               Nazwa Planu
             </Text>
-            <Text className='text-gray-400 mb-6'>
+            <Text className='mb-6 text-gray-400'>
               Wprowadź nazwę swojego planu treningowego
             </Text>
             <TextInput
@@ -93,7 +95,7 @@ export default function CreatePlanScreen() {
               onChangeText={(value) => updateFormData('name', value)}
               placeholder='np. Plan Siłowy dla Początkujących'
               placeholderTextColor='#9CA3AF'
-              className='bg-slate-800 border border-gray-600 rounded-lg px-4 py-3 text-white text-lg'
+              className='px-4 py-3 text-lg text-white border border-gray-600 rounded-lg bg-slate-800'
               autoFocus
             />
           </View>
@@ -102,10 +104,10 @@ export default function CreatePlanScreen() {
       case 2:
         return (
           <View className='flex-1 px-6'>
-            <Text className='text-2xl font-bold text-white mb-2'>
+            <Text className='mb-2 text-2xl font-bold text-white'>
               Czas Trwania
             </Text>
-            <Text className='text-gray-400 mb-6'>
+            <Text className='mb-6 text-gray-400'>
               Ile tygodni ma trwać Twój plan?
             </Text>
             <TextInput
@@ -113,8 +115,8 @@ export default function CreatePlanScreen() {
               onChangeText={(value) => updateFormData('duration', value)}
               placeholder='np. 8'
               placeholderTextColor='#9CA3AF'
-              keyboardType='numeric'
-              className='bg-slate-800 border border-gray-600 rounded-lg px-4 py-3 text-white text-lg'
+              keyboardType='decimal-pad'
+              className='px-4 py-3 text-lg text-white border border-gray-600 rounded-lg bg-slate-800'
               autoFocus
             />
           </View>
@@ -123,10 +125,10 @@ export default function CreatePlanScreen() {
       case 3:
         return (
           <View className='flex-1 px-6'>
-            <Text className='text-2xl font-bold text-white mb-2'>
+            <Text className='mb-2 text-2xl font-bold text-white'>
               Opis Planu
             </Text>
-            <Text className='text-gray-400 mb-6'>
+            <Text className='mb-6 text-gray-400'>
               Dodaj opcjonalny opis swojego planu (można pominąć)
             </Text>
             <TextInput
@@ -136,7 +138,7 @@ export default function CreatePlanScreen() {
               placeholderTextColor='#9CA3AF'
               multiline
               numberOfLines={4}
-              className='bg-slate-800 border border-gray-600 rounded-lg px-4 py-3 text-white text-lg h-32'
+              className='h-32 px-4 py-3 text-lg text-white border border-gray-600 rounded-lg bg-slate-800'
               textAlignVertical='top'
             />
           </View>
@@ -160,7 +162,7 @@ export default function CreatePlanScreen() {
               onPress={() => (step === 1 ? router.back() : prevStep())}
               className='self-start mb-4'
             >
-              <Text className='text-purple-400 text-base'>
+              <Text className='text-base text-purple-400'>
                 ← {step === 1 ? 'Wróć' : 'Poprzedni'}
               </Text>
             </TouchableOpacity>
@@ -174,7 +176,7 @@ export default function CreatePlanScreen() {
                     stepNumber <= step ? 'bg-purple-600' : 'bg-gray-600'
                   }`}
                 >
-                  <Text className='text-white font-semibold text-sm'>
+                  <Text className='text-sm font-semibold text-white'>
                     {stepNumber}
                   </Text>
                 </View>
@@ -197,7 +199,7 @@ export default function CreatePlanScreen() {
               {isCreating ? (
                 <ActivityIndicator color='#ffffff' />
               ) : (
-                <Text className='text-white font-semibold text-lg'>
+                <Text className='text-lg font-semibold text-white'>
                   {step === 3 ? 'Utwórz Plan' : 'Dalej'}
                 </Text>
               )}

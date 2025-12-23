@@ -75,9 +75,9 @@ class ApiClient {
   ): Promise<T> {
     const token = await this.getToken();
 
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string> | undefined),
     };
 
     if (token) {
@@ -102,7 +102,9 @@ class ApiClient {
         } catch (jsonError) {
           // If JSON parsing fails, try to get text for better error message
           const text = await response.text();
-          throw new Error(`Invalid JSON response: ${text.substring(0, 100)}`);
+          throw new Error(
+            `Invalid JSON response: ${text.substring(0, 100)}, ${jsonError}`,
+          );
         }
       } else {
         // Non-JSON response (likely HTML error page or plain text)
@@ -218,7 +220,7 @@ class ApiClient {
       await this.getCurrentUser();
       return true;
     } catch (error) {
-      // Token is invalid or expired
+      console.log(error);
       await this.removeToken();
       return false;
     }
@@ -231,7 +233,9 @@ class ApiClient {
     });
   }
 
-  async createWorkoutPlan(data: CreateWorkoutPlanRequest): Promise<WorkoutPlan> {
+  async createWorkoutPlan(
+    data: CreateWorkoutPlanRequest,
+  ): Promise<WorkoutPlan> {
     return this.request<WorkoutPlan>(API_ENDPOINTS.WORKOUT_PLANS.CREATE, {
       method: 'POST',
       body: JSON.stringify(data),
@@ -244,7 +248,10 @@ class ApiClient {
     });
   }
 
-  async updateWorkoutPlan(id: string, data: UpdateWorkoutPlanRequest): Promise<void> {
+  async updateWorkoutPlan(
+    id: string,
+    data: UpdateWorkoutPlanRequest,
+  ): Promise<void> {
     await this.request(API_ENDPOINTS.WORKOUT_PLANS.UPDATE(id), {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -253,23 +260,39 @@ class ApiClient {
 
   // Training Days
   async getTrainingDays(planId: string): Promise<TrainingDay[]> {
-    return this.request<TrainingDay[]>(API_ENDPOINTS.TRAINING_DAYS.LIST(planId), {
-      method: 'GET',
-    });
+    return this.request<TrainingDay[]>(
+      API_ENDPOINTS.TRAINING_DAYS.LIST(planId),
+      {
+        method: 'GET',
+      },
+    );
   }
 
-  async createTrainingDay(planId: string, data: CreateTrainingDayRequest): Promise<TrainingDay> {
-    return this.request<TrainingDay>(API_ENDPOINTS.TRAINING_DAYS.CREATE(planId), {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+  async createTrainingDay(
+    planId: string,
+    data: CreateTrainingDayRequest,
+  ): Promise<TrainingDay> {
+    return this.request<TrainingDay>(
+      API_ENDPOINTS.TRAINING_DAYS.CREATE(planId),
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      },
+    );
   }
 
-  async updateTrainingDay(planId: string, dayId: string, data: UpdateTrainingDayRequest): Promise<TrainingDay> {
-    return this.request<TrainingDay>(API_ENDPOINTS.TRAINING_DAYS.UPDATE(planId, dayId), {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
+  async updateTrainingDay(
+    planId: string,
+    dayId: string,
+    data: UpdateTrainingDayRequest,
+  ): Promise<TrainingDay> {
+    return this.request<TrainingDay>(
+      API_ENDPOINTS.TRAINING_DAYS.UPDATE(planId, dayId),
+      {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      },
+    );
   }
 
   async deleteTrainingDay(planId: string, dayId: string): Promise<void> {
@@ -285,18 +308,28 @@ class ApiClient {
     });
   }
 
-  async createExercise(dayId: string, data: CreateExerciseRequest): Promise<Exercise> {
+  async createExercise(
+    dayId: string,
+    data: CreateExerciseRequest,
+  ): Promise<Exercise> {
     return this.request<Exercise>(API_ENDPOINTS.EXERCISES.CREATE(dayId), {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async updateExercise(dayId: string, exerciseId: string, data: UpdateExerciseRequest): Promise<Exercise> {
-    return this.request<Exercise>(API_ENDPOINTS.EXERCISES.UPDATE(dayId, exerciseId), {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
+  async updateExercise(
+    dayId: string,
+    exerciseId: string,
+    data: UpdateExerciseRequest,
+  ): Promise<Exercise> {
+    return this.request<Exercise>(
+      API_ENDPOINTS.EXERCISES.UPDATE(dayId, exerciseId),
+      {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      },
+    );
   }
 
   async deleteExercise(dayId: string, exerciseId: string): Promise<void> {

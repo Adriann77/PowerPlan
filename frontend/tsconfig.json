@@ -2,8 +2,8 @@
   "compilerOptions": {
     "strict": true,
     "jsx": "react-native",
-    "module": "esnext",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
     "target": "esnext",
     "lib": [
       "esnext"

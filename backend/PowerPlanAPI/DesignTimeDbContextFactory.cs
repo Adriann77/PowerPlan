@@ -16,9 +16,9 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
             .Build();
 
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-        var connectionString = configuration.GetConnectionString("Postgres");
+        var dbPath = Path.Combine(Directory.GetCurrentDirectory(), "powerplan.db");
 
-        optionsBuilder.UseNpgsql(connectionString, o => o.MigrationsAssembly("PowerPlanAPI"));
+        optionsBuilder.UseSqlite($"Data Source={dbPath}");
 
         return new AppDbContext(optionsBuilder.Options);
     }

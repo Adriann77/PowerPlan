@@ -1,14 +1,42 @@
-import { Tabs } from 'expo-router';
+import { Tabs, Redirect, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { StatusBar } from 'react-native';
+import { StatusBar, Text, TouchableOpacity } from 'react-native';
+import { useAuth } from '@/providers/AuthProvider';
 
 export default function TabLayout() {
+  const { currentUser, isAuthenticated, isLoading, logout } = useAuth();
+
+  if (!isLoading && !isAuthenticated) {
+    return <Redirect href='/login' />;
+  }
+
+  const handleLogout = async () => {
+    await logout();
+    router.replace('/login');
+  };
+
   return (
     <>
       <StatusBar barStyle='light-content' />
       <Tabs
         screenOptions={{
-          headerShown: false,
+          headerShown: true,
+          headerStyle: {
+            backgroundColor: '#030014',
+          },
+          headerTintColor: '#9ca4ab',
+          headerTitle: currentUser?.username ?? 'PowerPlan',
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={handleLogout}
+              accessibilityRole='button'
+              style={{ paddingHorizontal: 12, paddingVertical: 6 }}
+            >
+              <Text style={{ color: '#AB8BFF', fontWeight: '600' }}>
+                Wyloguj
+              </Text>
+            </TouchableOpacity>
+          ),
           tabBarStyle: {
             backgroundColor: '#030014',
             borderTopColor: '#151312',

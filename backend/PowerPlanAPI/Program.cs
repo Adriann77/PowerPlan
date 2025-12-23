@@ -8,6 +8,7 @@ using PowerPlanAPI.Services;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,12 +17,18 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // ➤ DATABASE
+var dbPath = Path.Combine(Directory.GetCurrentDirectory(), "powerplan.db");
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
+    options.UseSqlite($"Data Source={dbPath}"));
 
 // ➤ SERVICES
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    })
     .ConfigureApiBehaviorOptions(options =>
     {
         // Ensure validation errors return JSON instead of HTML
@@ -48,7 +55,9 @@ builder.Services.AddCors(options =>
                 "http://127.0.0.1:8081",
                 "http://127.0.0.1:19006",
                 "exp://localhost:8081",
-                "exp://127.0.0.1:8081"
+                "exp://127.0.0.1:8081",
+                "http://192.168.1.23:8081",  // Add your computer's IP for physical device
+                "exp://192.168.1.23:8081"   // Add your computer's IP for Expo Go
               )
               .AllowAnyMethod()
               .AllowAnyHeader()

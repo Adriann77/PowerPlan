@@ -11,7 +11,7 @@
     "build:frontend": "cd frontend && pnpm run build",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend/PowerPlanAPI && dotnet watch",
-    "dev:frontend": "cd frontend && npx expo start --web",
+    "dev:frontend": "cd frontend && npx expo start --ios",
     "start": "npm run dev",
     "setup": "npm run install:all"
   },

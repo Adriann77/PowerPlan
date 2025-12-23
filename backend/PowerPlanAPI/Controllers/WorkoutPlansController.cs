@@ -31,12 +31,26 @@ public class WorkoutPlansController : ControllerBase
 
     // SCRUM-53: Implement `GET /api/workoutplans` (list user's workout plans)
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<WorkoutPlan>>> GetUserWorkoutPlans()
+    public async Task<ActionResult<IEnumerable<WorkoutPlanDTO>>> GetUserWorkoutPlans()
     {
         var userId = GetCurrentUserId();
 
         var plans = await _db.WorkoutPlans
+            .Include(p => p.TrainingDays)
+            .Include(p => p.WorkoutSessions)
             .Where(p => p.UserId == userId)
+            .Select(p => new WorkoutPlanDTO
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                WeekDuration = p.WeekDuration,
+                IsActive = p.IsActive,
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = p.UpdatedAt,
+                TrainingDaysCount = p.TrainingDays.Count,
+                WorkoutSessionsCount = p.WorkoutSessions.Count
+            })
             .ToListAsync();
 
         return Ok(plans);
@@ -44,12 +58,27 @@ public class WorkoutPlansController : ControllerBase
 
     // SCRUM-54: Implement GET /api/workoutplans/{id}
     [HttpGet("{id}")]
-    public async Task<ActionResult<WorkoutPlan>> GetWorkoutPlanById(string id)
+    public async Task<ActionResult<WorkoutPlanDTO>> GetWorkoutPlanById(string id)
     {
         var userId = GetCurrentUserId();
 
         var plan = await _db.WorkoutPlans
-            .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
+            .Include(p => p.TrainingDays)
+            .Include(p => p.WorkoutSessions)
+            .Where(p => p.Id == id && p.UserId == userId)
+            .Select(p => new WorkoutPlanDTO
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                WeekDuration = p.WeekDuration,
+                IsActive = p.IsActive,
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = p.UpdatedAt,
+                TrainingDaysCount = p.TrainingDays.Count,
+                WorkoutSessionsCount = p.WorkoutSessions.Count
+            })
+            .FirstOrDefaultAsync();
 
         if (plan == null)
         {

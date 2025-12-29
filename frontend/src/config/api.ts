@@ -13,13 +13,13 @@ const getApiBaseUrl = () => {
   if (__DEV__) {
     // Development mode - change this based on your setup
     // For iOS Simulator:
-    return 'http://localhost:5226';
+    // return 'http://localhost:5226';
 
     // For Android Emulator, uncomment this instead:
     // return 'http://10.0.2.2:5226';
 
-    // For physical device, replace with your computer's IP:
-    // return 'http://192.168.1.100:5226';
+    // For physical device, use your computer's IP:
+    return 'http://192.168.1.23:5226';
   }
 
   // Production mode - replace with your production API URL
@@ -34,5 +34,39 @@ export const API_ENDPOINTS = {
     LOGIN: '/auth/login',
     LOGOUT: '/auth/logout',
     ME: '/auth/me',
+  },
+  WORKOUT_PLANS: {
+    LIST: '/api/workoutplans',
+    CREATE: '/api/workoutplans',
+    GET: (id: string) => `/api/workoutplans/${id}`,
+    UPDATE: (id: string) => `/api/workoutplans/${id}`,
+    DELETE: (id: string) => `/api/workoutplans/${id}`,
+  },
+  TRAINING_DAYS: {
+    LIST: (planId: string) => `/api/workoutplans/${planId}/trainingdays`,
+    CREATE: (planId: string) => `/api/workoutplans/${planId}/trainingdays`,
+    GET: (planId: string, dayId: string) =>
+      `/api/workoutplans/${planId}/trainingdays/${dayId}`,
+    UPDATE: (planId: string, dayId: string) =>
+      `/api/workoutplans/${planId}/trainingdays/${dayId}`,
+    DELETE: (planId: string, dayId: string) =>
+      `/api/workoutplans/${planId}/trainingdays/${dayId}`,
+  },
+  EXERCISES: {
+    LIST: (dayId: string) => `/api/trainingdays/${dayId}/exercises`,
+    CREATE: (dayId: string) => `/api/trainingdays/${dayId}/exercises`,
+    GET: (dayId: string, exerciseId: string) =>
+      `/api/trainingdays/${dayId}/exercises/${exerciseId}`,
+    UPDATE: (dayId: string, exerciseId: string) =>
+      `/api/trainingdays/${dayId}/exercises/${exerciseId}`,
+    DELETE: (dayId: string, exerciseId: string) =>
+      `/api/trainingdays/${dayId}/exercises/${exerciseId}`,
+  },
+  WORKOUT_SESSIONS: {
+    LIST: '/api/sessions',
+    HISTORY: '/api/sessions/history',
+    START: '/api/sessions/start',
+    COMPLETE: (id: string) => `/api/sessions/complete/${id}`,
+    SUGGEST_WEIGHTS: '/api/sessions/suggest-weights',
   },
 } as const;

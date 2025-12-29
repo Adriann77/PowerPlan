@@ -1,3 +1,5 @@
+using PowerPlanAPI.DTOs.WorkoutSession;
+
 public class WorkoutSessionDTO
 {
     public string Id { get; set; } = string.Empty;
@@ -10,4 +12,6 @@ public class WorkoutSessionDTO
 
     public string WorkoutPlanName { get; set; } = string.Empty;
     public string TrainingDayName { get; set; } = string.Empty;
+
+    public List<ExerciseLogDTO> ExerciseLogs { get; set; } = new();
 }

@@ -56,7 +56,7 @@ function MainTabs() {
       screenOptions={({ route }: { route: any }) => ({
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#030014',3
+          backgroundColor: '#030014',
           borderTopColor: '#151312',
           borderTopWidth: 1,
         },

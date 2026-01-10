@@ -33,6 +33,7 @@ public class AppDbContext : DbContext
         // Training Days
         mb.Entity<TrainingDay>().HasKey(t => t.Id);
         mb.Entity<TrainingDay>().HasIndex(t => new { t.WorkoutPlanId, t.Name }).IsUnique();
+        mb.Entity<TrainingDay>().HasOne(t => t.WorkoutPlan).WithMany(w => w.TrainingDays).HasForeignKey(t => t.WorkoutPlanId).OnDelete(DeleteBehavior.Cascade);
 
         // Уникальность is_active = true только один на пользователя
 mb.Entity<WorkoutPlan>()
@@ -40,11 +41,11 @@ mb.Entity<WorkoutPlan>()
     .HasFilter("\"IsActive\" = true");
 
         // Остальные связи
-        mb.Entity<Exercise>().HasOne(e => e.TrainingDay).WithMany(t => t.Exercises).HasForeignKey(e => e.TrainingDayId);
-        mb.Entity<WorkoutSession>().HasOne(ws => ws.WorkoutPlan).WithMany(w => w.WorkoutSessions).HasForeignKey(ws => ws.WorkoutPlanId);
-        mb.Entity<WorkoutSession>().HasOne(ws => ws.TrainingDay).WithMany(t => t.WorkoutSessions).HasForeignKey(ws => ws.TrainingDayId);
-        mb.Entity<ExerciseLog>().HasOne(el => el.WorkoutSession).WithMany(ws => ws.ExerciseLogs).HasForeignKey(el => el.WorkoutSessionId);
-        mb.Entity<ExerciseLog>().HasOne(el => el.Exercise).WithMany(e => e.ExerciseLogs).HasForeignKey(el => el.ExerciseId);
+        mb.Entity<Exercise>().HasOne(e => e.TrainingDay).WithMany(t => t.Exercises).HasForeignKey(e => e.TrainingDayId).OnDelete(DeleteBehavior.Cascade);
+        mb.Entity<WorkoutSession>().HasOne(ws => ws.WorkoutPlan).WithMany(w => w.WorkoutSessions).HasForeignKey(ws => ws.WorkoutPlanId).OnDelete(DeleteBehavior.Cascade);
+        mb.Entity<WorkoutSession>().HasOne(ws => ws.TrainingDay).WithMany(t => t.WorkoutSessions).HasForeignKey(ws => ws.TrainingDayId).OnDelete(DeleteBehavior.Cascade);
+        mb.Entity<ExerciseLog>().HasOne(el => el.WorkoutSession).WithMany(ws => ws.ExerciseLogs).HasForeignKey(el => el.WorkoutSessionId).OnDelete(DeleteBehavior.Cascade);
+        mb.Entity<ExerciseLog>().HasOne(el => el.Exercise).WithMany(e => e.ExerciseLogs).HasForeignKey(el => el.ExerciseId).OnDelete(DeleteBehavior.Cascade);
 
         // Enum
         mb.Entity<ExerciseLog>().Property(el => el.NextPreference).HasColumnType("text")

@@ -12,12 +12,13 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, router } from 'expo-router';
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-import { apiClient, TrainingDay } from '../../src/services/api';
+import { apiClient, TrainingDay, Exercise } from '../../src/services/api';
 import { 
   EXERCISE_TEMPLATES, 
   getExerciseCategories, 
@@ -35,8 +36,12 @@ export default function ManagePlanScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [showAddDayModal, setShowAddDayModal] = useState(false);
   const [showAddExerciseModal, setShowAddExerciseModal] = useState(false);
+  const [showEditDayModal, setShowEditDayModal] = useState(false);
+  const [showEditExerciseModal, setShowEditExerciseModal] = useState(false);
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null);
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [newDayName, setNewDayName] = useState('');
+  const [editDayName, setEditDayName] = useState('');
   
   // Exercise modal state
   const [modalMode, setModalMode] = useState<ModalMode>('template');
@@ -49,6 +54,15 @@ export default function ManagePlanScreen() {
     tempo: '3-1-1-0',
     restSeconds: 90,
     notes: '',
+  });
+  const [editExercise, setEditExercise] = useState({
+    name: '',
+    sets: 3,
+    reps: '10',
+    tempo: '3-1-1-0',
+    restSeconds: 90,
+    notes: '',
+    orderNumber: 1,
   });
 
   const categories = useMemo(() => getExerciseCategories(), []);
@@ -188,6 +202,164 @@ export default function ManagePlanScreen() {
     });
   };
 
+  // Delete Training Day
+  const deleteTrainingDay = async (dayId: string) => {
+    Alert.alert(
+      'Usuń dzień treningowy',
+      'Czy na pewno chcesz usunąć ten dzień treningowy? Wszystkie ćwiczenia zostaną usunięte.',
+      [
+        { text: 'Anuluj', style: 'cancel' },
+        {
+          text: 'Usuń',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setIsSaving(true);
+              await apiClient.deleteTrainingDay(planId, dayId);
+              setTrainingDays((prev) => prev.filter((day) => day.id !== dayId));
+              Alert.alert('Sukces', 'Dzień treningowy został usunięty');
+            } catch (error) {
+              Alert.alert('Błąd', 'Nie udało się usunąć dnia treningowego');
+              console.error('Delete training day error:', error);
+            } finally {
+              setIsSaving(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // Edit Training Day
+  const openEditDayModal = (day: TrainingDay) => {
+    setSelectedDayId(day.id);
+    setEditDayName(day.name);
+    setShowEditDayModal(true);
+  };
+
+  const updateTrainingDay = async () => {
+    if (!selectedDayId || !editDayName.trim()) {
+      Alert.alert('Błąd', 'Nazwa dnia treningowego jest wymagana');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      await apiClient.updateTrainingDay(planId, selectedDayId, {
+        name: editDayName,
+      });
+      setTrainingDays((prev) =>
+        prev.map((day) =>
+          day.id === selectedDayId ? { ...day, name: editDayName } : day
+        )
+      );
+      setShowEditDayModal(false);
+      setSelectedDayId(null);
+      setEditDayName('');
+      Alert.alert('Sukces', 'Dzień treningowy został zaktualizowany');
+    } catch (error) {
+      Alert.alert('Błąd', 'Nie udało się zaktualizować dnia treningowego');
+      console.error('Update training day error:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Delete Exercise
+  const deleteExercise = async (dayId: string, exerciseId: string) => {
+    Alert.alert(
+      'Usuń ćwiczenie',
+      'Czy na pewno chcesz usunąć to ćwiczenie?',
+      [
+        { text: 'Anuluj', style: 'cancel' },
+        {
+          text: 'Usuń',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setIsSaving(true);
+              await apiClient.deleteExercise(dayId, exerciseId);
+              setTrainingDays((prev) =>
+                prev.map((day) =>
+                  day.id === dayId
+                    ? { ...day, exercises: day.exercises.filter((e) => e.id !== exerciseId) }
+                    : day
+                )
+              );
+              Alert.alert('Sukces', 'Ćwiczenie zostało usunięte');
+            } catch (error) {
+              Alert.alert('Błąd', 'Nie udało się usunąć ćwiczenia');
+              console.error('Delete exercise error:', error);
+            } finally {
+              setIsSaving(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // Edit Exercise
+  const openEditExerciseModal = (dayId: string, exercise: Exercise) => {
+    setSelectedDayId(dayId);
+    setSelectedExercise(exercise);
+    setEditExercise({
+      name: exercise.name,
+      sets: exercise.sets,
+      reps: exercise.reps.toString(),
+      tempo: exercise.tempo,
+      restSeconds: exercise.restSeconds,
+      notes: exercise.notes || '',
+      orderNumber: parseInt(exercise.orderNumber) || 1,
+    });
+    setShowEditExerciseModal(true);
+  };
+
+  const updateExercise = async () => {
+    if (!selectedDayId || !selectedExercise || !editExercise.name.trim()) {
+      Alert.alert('Błąd', 'Nazwa ćwiczenia jest wymagana');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      const updatedExercise = await apiClient.updateExercise(
+        selectedDayId,
+        selectedExercise.id,
+        {
+          name: editExercise.name,
+          sets: editExercise.sets,
+          reps: parseInt(editExercise.reps, 10) || 1,
+          tempo: editExercise.tempo,
+          restSeconds: editExercise.restSeconds,
+          notes: editExercise.notes || undefined,
+          orderNumber: editExercise.orderNumber,
+        }
+      );
+      setTrainingDays((prev) =>
+        prev.map((day) =>
+          day.id === selectedDayId
+            ? {
+                ...day,
+                exercises: day.exercises.map((e) =>
+                  e.id === selectedExercise.id ? updatedExercise : e
+                ),
+              }
+            : day
+        )
+      );
+      setShowEditExerciseModal(false);
+      setSelectedDayId(null);
+      setSelectedExercise(null);
+      Alert.alert('Sukces', 'Ćwiczenie zostało zaktualizowane');
+    } catch (error) {
+      Alert.alert('Błąd', 'Nie udało się zaktualizować ćwiczenia');
+      console.error('Update exercise error:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const openAddExerciseModal = (dayId: string) => {
     setSelectedDayId(dayId);
     setModalMode('template');
@@ -312,13 +484,27 @@ export default function ManagePlanScreen() {
               renderItem={({ item }) => (
                 <View className="p-6 mb-4 border border-gray-600 bg-slate-800 rounded-xl">
                   <View className="flex-row items-center justify-between mb-4">
-                    <Text className="text-xl font-bold text-white">{item.name}</Text>
-                    <TouchableOpacity
-                      onPress={() => openAddExerciseModal(item.id)}
-                      className="px-3 py-1 bg-green-600 rounded-lg"
-                    >
-                      <Text className="text-sm font-semibold text-white">+ Ćwiczenie</Text>
-                    </TouchableOpacity>
+                    <Text className="flex-1 text-xl font-bold text-white">{item.name}</Text>
+                    <View className="flex-row items-center gap-2">
+                      <TouchableOpacity
+                        onPress={() => openEditDayModal(item)}
+                        className="items-center justify-center w-9 h-9 rounded-lg bg-slate-700"
+                      >
+                        <Ionicons name="pencil" size={18} color="#AB8BFF" />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => deleteTrainingDay(item.id)}
+                        className="items-center justify-center w-9 h-9 rounded-lg bg-slate-700"
+                      >
+                        <Ionicons name="trash" size={18} color="#EF4444" />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => openAddExerciseModal(item.id)}
+                        className="px-3 py-1 ml-2 bg-green-600 rounded-lg"
+                      >
+                        <Text className="text-sm font-semibold text-white">+ Ćwiczenie</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
 
                   {item.exercises.length === 0 ? (
@@ -332,15 +518,31 @@ export default function ManagePlanScreen() {
                           key={exercise.id}
                           className="p-4 mb-2 rounded-lg bg-slate-700"
                         >
-                          <View className="flex-row items-center mb-2">
-                            <View className="items-center justify-center w-6 h-6 mr-3 bg-purple-600 rounded-full">
-                              <Text className="text-xs font-semibold text-slate-900">
-                                {exercise.orderNumber}
+                          <View className="flex-row items-center justify-between mb-2">
+                            <View className="flex-row items-center flex-1">
+                              <View className="items-center justify-center w-6 h-6 mr-3 bg-purple-600 rounded-full">
+                                <Text className="text-xs font-semibold text-slate-900">
+                                  {exercise.orderNumber}
+                                </Text>
+                              </View>
+                              <Text className="flex-1 font-semibold text-white">
+                                {exercise.name}
                               </Text>
                             </View>
-                            <Text className="flex-1 font-semibold text-white">
-                              {exercise.name}
-                            </Text>
+                            <View className="flex-row items-center gap-2">
+                              <TouchableOpacity
+                                onPress={() => openEditExerciseModal(item.id, exercise)}
+                                className="p-1.5"
+                              >
+                                <Ionicons name="pencil" size={16} color="#AB8BFF" />
+                              </TouchableOpacity>
+                              <TouchableOpacity
+                                onPress={() => deleteExercise(item.id, exercise.id)}
+                                className="p-1.5"
+                              >
+                                <Ionicons name="trash" size={16} color="#EF4444" />
+                              </TouchableOpacity>
+                            </View>
                           </View>
                           <View className="flex-row flex-wrap">
                             <Text className="mr-4 text-sm text-gray-300">
@@ -365,9 +567,9 @@ export default function ManagePlanScreen() {
               ListFooterComponent={() => (
                 <TouchableOpacity
                   onPress={() => setShowAddDayModal(true)}
-                  className="items-center p-6 border-2 border-gray-600 border-dashed bg-slate-700 rounded-xl"
+                  className="items-center p-6 bg-purple-600 rounded-xl"
                 >
-                  <Text className="text-lg font-semibold text-gray-400">
+                  <Text className="text-lg font-semibold text-white">
                     + Dodaj Dzień Treningowy
                   </Text>
                 </TouchableOpacity>
@@ -674,6 +876,224 @@ export default function ManagePlanScreen() {
               </ScrollView>
             </KeyboardAvoidingView>
           )}
+        </View>
+      </Modal>
+
+      {/* Edit Training Day Modal */}
+      <Modal
+        visible={showEditDayModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowEditDayModal(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          className="flex-1"
+        >
+          <View className="justify-start flex-1 bg-black bg-opacity-50">
+            <View
+              className="p-6 bg-slate-800 rounded-b-3xl"
+              style={{ marginTop: insets.top + 10 }}
+            >
+              <Text className="mb-4 text-xl font-bold text-white">
+                Edytuj Dzień Treningowy
+              </Text>
+              <TextInput
+                value={editDayName}
+                onChangeText={setEditDayName}
+                placeholder="Nazwa dnia (np. Dzień 1 - Klatka)"
+                placeholderTextColor="#9CA3AF"
+                className="px-4 py-3 mb-6 text-lg text-white border border-gray-600 rounded-lg bg-slate-700"
+                autoFocus
+              />
+              <View className="flex-row space-x-4">
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowEditDayModal(false);
+                    setSelectedDayId(null);
+                    setEditDayName('');
+                  }}
+                  className="items-center flex-1 py-3 mr-2 bg-gray-600 rounded-lg"
+                  disabled={isSaving}
+                >
+                  <Text className="font-semibold text-white">Anuluj</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={updateTrainingDay}
+                  className="items-center flex-1 py-3 ml-2 bg-purple-600 rounded-lg"
+                  disabled={isSaving}
+                >
+                  {isSaving ? (
+                    <ActivityIndicator size="small" color="#FFF" />
+                  ) : (
+                    <Text className="font-semibold text-white">Zapisz</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Edit Exercise Modal */}
+      <Modal
+        visible={showEditExerciseModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowEditExerciseModal(false)}
+      >
+        <View 
+          className="flex-1 bg-slate-900"
+          style={{ paddingTop: insets.top }}
+        >
+          {/* Modal Header */}
+          <View className="px-6 py-4 border-b border-gray-700">
+            <View className="flex-row items-center justify-between">
+              <Text className="text-xl font-bold text-white">Edytuj Ćwiczenie</Text>
+              <TouchableOpacity onPress={() => {
+                setShowEditExerciseModal(false);
+                setSelectedDayId(null);
+                setSelectedExercise(null);
+              }}>
+                <Text className="text-lg text-gray-400">✕</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            className="flex-1"
+          >
+            <ScrollView className="flex-1 px-6 pt-4">
+              <View className="flex flex-col gap-4">
+                <View>
+                  <Text className="mb-1 text-sm text-gray-400">Nazwa ćwiczenia</Text>
+                  <TextInput
+                    value={editExercise.name}
+                    onChangeText={(value) =>
+                      setEditExercise((prev) => ({ ...prev, name: value }))
+                    }
+                    placeholder="np. Wyciskanie sztangi na ławce poziomej"
+                    placeholderTextColor="#9CA3AF"
+                    className="px-4 py-3 text-white border border-gray-600 rounded-lg bg-slate-700"
+                  />
+                </View>
+
+                <View className="flex-row gap-4">
+                  <View className="flex-1">
+                    <Text className="mb-1 text-sm text-gray-400">Serie</Text>
+                    <TextInput
+                      value={editExercise.sets === 0 ? '' : editExercise.sets.toString()}
+                      onChangeText={(value) => {
+                        if (value === '') {
+                          setEditExercise((prev) => ({ ...prev, sets: 0 }));
+                        } else {
+                          const numValue = parseInt(value.replace(/[^0-9]/g, ''));
+                          setEditExercise((prev) => ({
+                            ...prev,
+                            sets: isNaN(numValue) ? 0 : numValue,
+                          }));
+                        }
+                      }}
+                      keyboardType="numeric"
+                      className="px-4 py-3 text-white border border-gray-600 rounded-lg bg-slate-700"
+                    />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="mb-1 text-sm text-gray-400">Powtórzenia</Text>
+                    <TextInput
+                      value={editExercise.reps}
+                      onChangeText={(value) =>
+                        setEditExercise((prev) => ({ ...prev, reps: value.replace(/[^0-9]/g, '') }))
+                      }
+                      placeholder="np. 10"
+                      placeholderTextColor="#9CA3AF"
+                      keyboardType="numeric"
+                      className="px-4 py-3 text-white border border-gray-600 rounded-lg bg-slate-700"
+                    />
+                  </View>
+                </View>
+
+                <View className="flex-row gap-4">
+                  <View className="flex-1">
+                    <Text className="mb-1 text-sm text-gray-400">Tempo</Text>
+                    <TextInput
+                      value={editExercise.tempo}
+                      onChangeText={(value) => {
+                        const formatted = formatTempo(value);
+                        setEditExercise((prev) => ({ ...prev, tempo: formatted }));
+                      }}
+                      placeholder="3-1-1-0"
+                      placeholderTextColor="#9CA3AF"
+                      keyboardType="numeric"
+                      maxLength={7}
+                      className="px-4 py-3 text-white border border-gray-600 rounded-lg bg-slate-700"
+                    />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="mb-1 text-sm text-gray-400">Odpoczynek (s)</Text>
+                    <TextInput
+                      value={editExercise.restSeconds === 0 ? '' : editExercise.restSeconds.toString()}
+                      onChangeText={(value) => {
+                        if (value === '') {
+                          setEditExercise((prev) => ({ ...prev, restSeconds: 0 }));
+                        } else {
+                          const numValue = parseInt(value.replace(/[^0-9]/g, ''));
+                          setEditExercise((prev) => ({
+                            ...prev,
+                            restSeconds: isNaN(numValue) ? 0 : numValue,
+                          }));
+                        }
+                      }}
+                      keyboardType="numeric"
+                      className="px-4 py-3 text-white border border-gray-600 rounded-lg bg-slate-700"
+                    />
+                  </View>
+                </View>
+
+                <View>
+                  <Text className="mb-1 text-sm text-gray-400">Notatki (opcjonalne)</Text>
+                  <TextInput
+                    value={editExercise.notes}
+                    onChangeText={(value) =>
+                      setEditExercise((prev) => ({ ...prev, notes: value }))
+                    }
+                    placeholder="Dodatkowe uwagi..."
+                    placeholderTextColor="#9CA3AF"
+                    multiline
+                    numberOfLines={2}
+                    className="px-4 py-3 text-white border border-gray-600 rounded-lg bg-slate-700"
+                    textAlignVertical="top"
+                  />
+                </View>
+              </View>
+
+              <View className="flex-row gap-4 mt-6 mb-8">
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowEditExerciseModal(false);
+                    setSelectedDayId(null);
+                    setSelectedExercise(null);
+                  }}
+                  className="items-center flex-1 py-3 bg-gray-600 rounded-lg"
+                  disabled={isSaving}
+                >
+                  <Text className="font-semibold text-white">Anuluj</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={updateExercise}
+                  className="items-center flex-1 py-3 bg-purple-600 rounded-lg"
+                  disabled={isSaving}
+                >
+                  {isSaving ? (
+                    <ActivityIndicator size="small" color="#FFF" />
+                  ) : (
+                    <Text className="font-semibold text-white">Zapisz</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
     </SafeAreaView>

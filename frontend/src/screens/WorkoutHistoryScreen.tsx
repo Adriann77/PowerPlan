@@ -212,7 +212,6 @@ export function WorkoutHistoryScreen() {
           <ErrorState message={error} onRetry={onRefresh} />
         ) : sessions.length === 0 ? (
           <EmptyState
-            icon="📋"
             title="Brak zapisanych treningów"
             message="Ukończ swój pierwszy trening, aby zobaczyć go tutaj."
           />

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { FlatList, Text, TouchableOpacity, View, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { usePlans } from '../hooks';
@@ -18,6 +19,7 @@ import {
 export function PlansScreen() {
   const { plans, isLoading, isRefreshing, error, refresh, setPlans } = usePlans();
   const [activatingPlanId, setActivatingPlanId] = useState<string | null>(null);
+  const [deletingPlanId, setDeletingPlanId] = useState<string | null>(null);
 
   const toggleActivePlan = async (plan: WorkoutPlan) => {
     try {
@@ -68,19 +70,61 @@ export function PlansScreen() {
     }
   };
 
+  const deletePlan = async (plan: WorkoutPlan) => {
+    Alert.alert(
+      'Usuń plan treningowy',
+      `Czy na pewno chcesz usunąć plan "${plan.name}"? Wszystkie dni treningowe i ćwiczenia zostaną usunięte.`,
+      [
+        { text: 'Anuluj', style: 'cancel' },
+        {
+          text: 'Usuń',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setDeletingPlanId(plan.id);
+              await apiClient.deleteWorkoutPlan(plan.id);
+              setPlans(prev => prev.filter(p => p.id !== plan.id));
+              Alert.alert('Sukces', 'Plan treningowy został usunięty');
+            } catch (err) {
+              Alert.alert('Błąd', 'Nie udało się usunąć planu treningowego');
+              console.error('Delete plan error:', err);
+            } finally {
+              setDeletingPlanId(null);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const renderPlanItem = ({ item }: { item: WorkoutPlan }) => (
     <Card variant={item.isActive ? 'active' : 'default'}>
+      <View className="flex-row items-start justify-between mb-2">
+        <TouchableOpacity
+          onPress={() => router.push(`/manage-plan/${item.id}`)}
+          activeOpacity={0.7}
+          className="flex-1"
+        >
+          <Text className="text-xl font-bold text-white mr-2">
+            {item.name}
+          </Text>
+        </TouchableOpacity>
+        <View className="flex-row items-center gap-2">
+          {item.isActive && <Badge label="AKTYWNY" variant="info" />}
+          <TouchableOpacity
+            onPress={() => deletePlan(item)}
+            className="p-2"
+            disabled={deletingPlanId === item.id}
+          >
+            <Ionicons name="trash-outline" size={20} color="#EF4444" />
+          </TouchableOpacity>
+        </View>
+      </View>
+      
       <TouchableOpacity
         onPress={() => router.push(`/manage-plan/${item.id}`)}
         activeOpacity={0.7}
       >
-        <View className="flex-row items-start justify-between mb-2">
-          <Text className="text-xl font-bold text-white flex-1 mr-2">
-            {item.name}
-          </Text>
-          {item.isActive && <Badge label="AKTYWNY" variant="info" />}
-        </View>
-        
         {item.description ? (
           <Text className="text-gray-400 mb-3 text-base" numberOfLines={2}>
             {item.description}
@@ -90,17 +134,17 @@ export function PlansScreen() {
         <View className="flex-row flex-wrap gap-2 mb-4">
           <View className="bg-slate-700 px-3 py-1 rounded-full">
             <Text className="text-gray-300 text-sm">
-              📅 {item.trainingDaysCount} dni
+              {item.trainingDaysCount} dni
             </Text>
           </View>
           <View className="bg-slate-700 px-3 py-1 rounded-full">
             <Text className="text-gray-300 text-sm">
-              ⏱️ {item.weekDuration} tygodni
+              {item.weekDuration} tygodni
             </Text>
           </View>
           <View className="bg-slate-700 px-3 py-1 rounded-full">
             <Text className="text-gray-300 text-sm">
-              🏋️ {item.workoutSessionsCount} sesji
+              {item.workoutSessionsCount} sesji
             </Text>
           </View>
         </View>
@@ -119,8 +163,8 @@ export function PlansScreen() {
   return (
     <SafeAreaView className="flex-1 bg-slate-900">
       <LoadingOverlay 
-        visible={activatingPlanId !== null} 
-        message="Aktualizowanie planu..." 
+        visible={activatingPlanId !== null || deletingPlanId !== null} 
+        message={deletingPlanId ? "Usuwanie planu..." : "Aktualizowanie planu..."} 
       />
       
       <View className="flex-1 px-6 pt-4">
@@ -158,7 +202,6 @@ export function PlansScreen() {
             contentContainerStyle={{ paddingBottom: 20 }}
             ListEmptyComponent={
               <EmptyState
-                icon="📋"
                 title="Brak planów treningowych"
                 message='Kliknij "+ Nowy Plan" aby stworzyć swój pierwszy plan treningowy.'
                 actionLabel="Utwórz Plan"

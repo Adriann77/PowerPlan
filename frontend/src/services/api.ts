@@ -305,6 +305,12 @@ class ApiClient {
     });
   }
 
+  async deleteWorkoutPlan(id: string): Promise<void> {
+    await this.request(API_ENDPOINTS.WORKOUT_PLANS.DELETE(id), {
+      method: 'DELETE',
+    });
+  }
+
   // Training Days
   async getTrainingDays(planId: string): Promise<TrainingDay[]> {
     return this.request<TrainingDay[]>(

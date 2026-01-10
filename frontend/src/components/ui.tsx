@@ -73,13 +73,11 @@ type EmptyStateProps = {
   message: string;
   actionLabel?: string;
   onAction?: () => void;
-  icon?: string;
 };
 
-export function EmptyState({ title, message, actionLabel, onAction, icon }: EmptyStateProps) {
+export function EmptyState({ title, message, actionLabel, onAction }: EmptyStateProps) {
   return (
     <View className="bg-slate-800 rounded-xl p-6 items-center">
-      {icon && <Text className="text-4xl mb-4">{icon}</Text>}
       {title && <Text className="text-white text-lg font-bold mb-2 text-center">{title}</Text>}
       <Text className="text-gray-400 text-base text-center">{message}</Text>
       {actionLabel && onAction && (
@@ -186,7 +184,6 @@ type ButtonProps = {
   size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
   loading?: boolean;
-  icon?: string;
   fullWidth?: boolean;
 };
 
@@ -197,7 +194,6 @@ export function Button({
   size = 'medium',
   disabled = false,
   loading = false,
-  icon,
   fullWidth = false,
 }: ButtonProps) {
   const variantStyles = {
@@ -235,10 +231,7 @@ export function Button({
       {loading ? (
         <ActivityIndicator size="small" color="#ffffff" />
       ) : (
-        <>
-          {icon && <Text className="mr-2">{icon}</Text>}
-          <Text className={`text-white font-semibold ${textSizes[size]}`}>{label}</Text>
-        </>
+        <Text className={`text-white font-semibold ${textSizes[size]}`}>{label}</Text>
       )}
     </TouchableOpacity>
   );
@@ -285,12 +278,11 @@ type StatCardProps = {
   label: string;
   value: string | number;
   subtitle?: string;
-  icon?: string;
   trend?: 'up' | 'down' | 'neutral';
   trendValue?: string;
 };
 
-export function StatCard({ label, value, subtitle, icon, trend, trendValue }: StatCardProps) {
+export function StatCard({ label, value, subtitle, trend, trendValue }: StatCardProps) {
   const trendColors = {
     up: 'text-green-400',
     down: 'text-red-400',
@@ -307,7 +299,6 @@ export function StatCard({ label, value, subtitle, icon, trend, trendValue }: St
     <View className="bg-slate-800 rounded-xl p-4 flex-1">
       <View className="flex-row items-center justify-between mb-2">
         <Text className="text-gray-400 text-sm">{label}</Text>
-        {icon && <Text>{icon}</Text>}
       </View>
       <Text className="text-white text-2xl font-bold">{value}</Text>
       {(subtitle || (trend && trendValue)) && (

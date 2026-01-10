@@ -279,13 +279,11 @@ export function ProgressScreen() {
           <ErrorState message={error} onRetry={onRefresh} />
         ) : !activePlan ? (
           <EmptyState
-            icon="📊"
             title="Brak aktywnego planu"
             message='Aktywuj plan w zakładce "Plany", aby zobaczyć swój postęp.'
           />
         ) : sessions.length === 0 ? (
           <EmptyState
-            icon="🏋️"
             title="Brak zapisanych treningów"
             message="Ukończ przynajmniej jeden trening, aby zobaczyć postęp."
           />
@@ -340,7 +338,6 @@ export function ProgressScreen() {
                 <StatCard
                   label="Aktualny ciężar"
                   value={exerciseProgressData.latestWeight !== null ? `${exerciseProgressData.latestWeight} kg` : '—'}
-                  icon="🏋️"
                 />
                 <StatCard
                   label="Postęp"
@@ -350,7 +347,6 @@ export function ProgressScreen() {
                   trend={exerciseProgressData.progressPercentage !== null 
                     ? exerciseProgressData.progressPercentage > 0 ? 'up' : exerciseProgressData.progressPercentage < 0 ? 'down' : 'neutral'
                     : undefined}
-                  icon="📈"
                 />
               </View>
             )}
@@ -393,14 +389,12 @@ export function ProgressScreen() {
             {/* Hint when no exercise selected */}
             {!selectedExerciseId && selectedTrainingDayId && (
               <EmptyState
-                icon="👆"
                 message="Wybierz ćwiczenie powyżej, aby zobaczyć szczegółowy wykres postępu."
               />
             )}
 
             {!selectedTrainingDayId && (
               <EmptyState
-                icon="👆"
                 message="Wybierz dzień treningowy powyżej, aby zobaczyć dostępne ćwiczenia i postępy."
               />
             )}

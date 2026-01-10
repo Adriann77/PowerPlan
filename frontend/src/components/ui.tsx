@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,9 @@ import {
   Modal,
   TouchableOpacity,
   RefreshControl,
+  ScrollView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 // Loading Overlay for full-screen loading states
 type LoadingOverlayProps = {
@@ -343,4 +345,86 @@ export function FilterChip({ label, selected, onPress }: FilterChipProps) {
 // Divider Component
 export function Divider({ className = '' }: { className?: string }) {
   return <View className={`h-px bg-gray-700 ${className}`} />;
+}
+
+// Select Component
+type SelectOption = {
+  value: string | null;
+  label: string;
+};
+
+type SelectProps = {
+  label?: string;
+  placeholder?: string;
+  options: SelectOption[];
+  value: string | null;
+  onChange: (value: string | null) => void;
+};
+
+export function Select({ label, placeholder = 'Wybierz...', options, value, onChange }: SelectProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const selectedOption = options.find(opt => opt.value === value);
+  const displayText = selectedOption?.label || placeholder;
+
+  return (
+    <View>
+      {label && (
+        <Text className="text-white font-semibold mb-2">{label}</Text>
+      )}
+      <TouchableOpacity
+        onPress={() => setIsOpen(true)}
+        className="flex-row items-center justify-between bg-slate-800 border border-gray-600 rounded-xl px-4 py-3"
+      >
+        <Text className={`text-base ${selectedOption ? 'text-white' : 'text-gray-400'}`}>
+          {displayText}
+        </Text>
+        <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
+      </TouchableOpacity>
+
+      <Modal
+        visible={isOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsOpen(false)}
+      >
+        <TouchableOpacity 
+          activeOpacity={1}
+          onPress={() => setIsOpen(false)}
+          className="flex-1 bg-black/60 justify-end"
+        >
+          <View className="bg-slate-800 rounded-t-3xl max-h-[60%]">
+            <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-700">
+              <Text className="text-lg font-bold text-white">{label || 'Wybierz'}</Text>
+              <TouchableOpacity onPress={() => setIsOpen(false)}>
+                <Ionicons name="close" size={24} color="#9CA3AF" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView className="max-h-80">
+              {options.map((option, index) => (
+                <TouchableOpacity
+                  key={option.value ?? 'null'}
+                  onPress={() => {
+                    onChange(option.value);
+                    setIsOpen(false);
+                  }}
+                  className={`flex-row items-center justify-between px-6 py-4 border-b border-gray-700/50 ${
+                    value === option.value ? 'bg-purple-600/20' : ''
+                  }`}
+                >
+                  <Text className={`text-base ${value === option.value ? 'text-purple-400 font-semibold' : 'text-white'}`}>
+                    {option.label}
+                  </Text>
+                  {value === option.value && (
+                    <Ionicons name="checkmark" size={20} color="#AB8BFF" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <View className="h-8" />
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    </View>
+  );
 }

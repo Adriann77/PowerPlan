@@ -12,4 +12,5 @@ export {
   StatCard,
   FilterChip,
   Divider,
+  Select,
 } from './ui';

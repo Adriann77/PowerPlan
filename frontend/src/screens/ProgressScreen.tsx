@@ -13,7 +13,7 @@ import {
   ErrorState,
   EmptyState,
   createRefreshControl,
-  FilterChip,
+  Select,
   StatCard,
 } from '../components';
 
@@ -291,44 +291,34 @@ export function ProgressScreen() {
           <View className="pb-8">
             {/* Training Day Filter */}
             <View className="mb-4">
-              <Text className="text-white font-semibold mb-3">Wybierz dzień treningowy:</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <FilterChip
-                  label="Wszystkie"
-                  selected={selectedTrainingDayId === null}
-                  onPress={() => {
-                    setSelectedTrainingDayId(null);
-                    setSelectedExerciseId(null);
-                  }}
-                />
-                {trainingDays.map((day) => (
-                  <FilterChip
-                    key={day.id}
-                    label={day.name}
-                    selected={selectedTrainingDayId === day.id}
-                    onPress={() => {
-                      setSelectedTrainingDayId(day.id);
-                      setSelectedExerciseId(null);
-                    }}
-                  />
-                ))}
-              </ScrollView>
+              <Select
+                label="Dzień treningowy"
+                placeholder="Wybierz dzień treningowy..."
+                options={[
+                  { value: null, label: 'Wszystkie dni' },
+                  ...trainingDays.map((day) => ({ value: day.id, label: day.name }))
+                ]}
+                value={selectedTrainingDayId}
+                onChange={(value: string | null) => {
+                  setSelectedTrainingDayId(value);
+                  setSelectedExerciseId(null);
+                }}
+              />
             </View>
 
             {/* Exercise Filter (only show if training day is selected) */}
             {selectedTrainingDayId && availableExercises.length > 0 && (
               <View className="mb-6">
-                <Text className="text-white font-semibold mb-3">Wybierz ćwiczenie:</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {availableExercises.map((exercise) => (
-                    <FilterChip
-                      key={exercise.id}
-                      label={exercise.name}
-                      selected={selectedExerciseId === exercise.id}
-                      onPress={() => setSelectedExerciseId(exercise.id)}
-                    />
-                  ))}
-                </ScrollView>
+                <Select
+                  label="Ćwiczenie"
+                  placeholder="Wybierz ćwiczenie..."
+                  options={availableExercises.map((exercise) => ({ 
+                    value: exercise.id, 
+                    label: exercise.name 
+                  }))}
+                  value={selectedExerciseId}
+                  onChange={(value: string | null) => setSelectedExerciseId(value)}
+                />
               </View>
             )}
 

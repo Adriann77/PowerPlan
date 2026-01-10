@@ -16,22 +16,22 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// ➤ DATABASE (Twoja konfiguracja PostgreSQL - SCRUM-51)
+// ➤--- DATABASE --- 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
 
-// ➤ SERVICES & CONTROLLERS (Połączone poprawki Twoje i Adriana)
+// ➤ SERVICES & CONTROLLERS 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // Ulepszenia Adriana dla czytelności JSON
+        // JSON readability improvements
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     })
     .ConfigureApiBehaviorOptions(options =>
     {
-        // Zapewnienie, że błędy walidacji wracają jako JSON (poprawka Adriana)
+        // Ensuring that validation errors return as JSON
         options.InvalidModelStateResponseFactory = context =>
         {
             var errors = context.ModelState
@@ -46,7 +46,7 @@ builder.Services.AddControllers()
 
 builder.Services.AddAuthorization();
 
-// ➤ CORS (Rozszerzona lista adresów Adriana dla urządzeń mobilnych i Expo)
+// ➤ CORS 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactNative", policy =>
@@ -67,10 +67,10 @@ builder.Services.AddCors(options =>
     });
 });
 
-// --- KONFIGURACJA JWT ---
+// --- JWT CONFIGURATION ---
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-// Zmieniony klucz, aby GitGuardian nie zgłaszał błędu bezpieczeństwa
-var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"] ?? "ZabezpieczonyKluczDoTokenowJWT_PowerPlan2025");
+// Changed key so GitGuardian doesn't report a security error
+var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"] ?? "SecureTokenKeyJWT_PowerPlan2025");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options => {
@@ -96,22 +96,22 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// --- SEEDING BAZY (Twoje zadanie SCRUM-70) ---
+// --- SEEDING DATABASE  ---
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try {
         var context = services.GetRequiredService<AppDbContext>();
         DbInitializer.Initialize(context); // Wywołuje Twój DbInitializer.cs
-        Console.WriteLine("SUKCES: Dane zostaly dodane do bazy!");
+        Console.WriteLine("SUCCESS: Data has been added to the database!");
     } catch (Exception ex) {
-        Console.WriteLine("BLAD SEEDOWANIA: " + ex.Message);
+        Console.WriteLine("SEEDING ERROR: " + ex.Message);
     }
 }
 
 app.Run();
 
-// --- KLASY POMOCNICZE ---
+// --- Helper classes ---
 public static class JwtHelper
 {
     private static IConfiguration Configuration { get; set; } = null!;
@@ -123,7 +123,7 @@ public static class JwtHelper
 
     public static string GenerateToken(string userId, string username)
     {
-        var secret = Configuration["Jwt:Secret"] ?? "ZabezpieczonyKluczDoTokenowJWT_PowerPlan2025";
+        var secret = Configuration["Jwt:Secret"] ?? "SecureTokenKeyJWT_PowerPlan2025";
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

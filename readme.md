@@ -4,6 +4,7 @@
 Katedra Informatyki — Laboratorium z przedmiotu Projekt zespołowy  
 Rok akademicki: 2025/2026  
 Grupa: 2
+Zespół: 1
 
 ---
 
@@ -30,6 +31,14 @@ Grupa: 2
 
 ---
 
+## Dokumentacja (skróty)
+
+- Dokumentacja techniczna: `techniczna-dokumentacja.md`
+- Dokumentacja wdrożeniowa (uruchomienie lokalne): `wdrożeniowa-dokumentacja.md`
+- Dokumentacja użytkowa: `użytkowa-dokumentacja.md`
+
+---
+
 ## Wymagania systemowe
 
 Przed rozpoczęciem pracy upewnij się, że masz zainstalowane następujące narzędzia:
@@ -38,7 +47,7 @@ Przed rozpoczęciem pracy upewnij się, że masz zainstalowane następujące nar
 
 - **.NET SDK**: Wersja 8.0.416 lub nowsza
   - Pobierz z: [https://dotnet.microsoft.com/download](https://dotnet.microsoft.com/download)
-- **PostgreSQL**: Dostęp do bazy danych PostgreSQL (lokalna lub zdalna)
+- **Baza danych**: W aktualnej implementacji dev backend używa **SQLite** (plik `powerplan.db`).
 - **C#**: Wersja 10 lub nowsza (zawarta w .NET SDK)
 
 ### Wymagania dla Frontendu
@@ -401,13 +410,15 @@ Dla każdego zadania/epika powinniśmy potwierdzić następujące kryteria:
 
 ## Role i odpowiedzialności
 
-Zespół liczy 3 osoby:
+Zespół liczy 5 osób:
 
-| Osoba            | Rola                  | Odpowiedzialność                                                                               |
-| ---------------- | --------------------- | ---------------------------------------------------------------------------------------------- |
-| Adrian Klimas    | Kierownik projektu    | Frontend (React Native + Tailwind + TanStack Query), przygotowanie części UI, integracja z API |
-| Mikołaj Grądecki | Backend + baza danych | Projektowanie API, logika biznesowa, model danych (C# .NET + PostgreSQL)                       |
-| Sebastian Nowak  | Backend + baza danych | Współpraca w implementacji API, migracje, bezpieczeństwo danych (C# .NET + PostgreSQL)         |
+| Osoba            | Rola                   | Odpowiedzialność                                                                               |
+| ---------------- | ---------------------- | ---------------------------------------------------------------------------------------------- |
+| Adrian Klimas    | Kierownik projektu     | Frontend (React Native + Tailwind + TanStack Query), przygotowanie części UI, integracja z API |
+| Mikołaj Grądecki | Backend + baza danych  | Projektowanie API, logika biznesowa, model danych (C# .NET + PostgreSQL)                       |
+| Sebastian Nowak  | Backend + baza danych  | Współpraca w implementacji API, migracje, bezpieczeństwo danych (C# .NET + PostgreSQL)         |
+| Danila Panamarou | Backend + dokumentacja | Współpraca w implementacji API, migracje, bezpieczeństwo danych (C# .NET + PostgreSQL)         |
+| Bohdan Islamov   | Tester / QA            | Testowanie aplikacji od strony backendu jak i frontendu                                        |
 
 ---
 
@@ -419,4 +430,3 @@ Zespół liczy 3 osoby:
 - **Komunikacja:** Discord
 
 ---
-

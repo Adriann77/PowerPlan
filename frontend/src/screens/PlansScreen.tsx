@@ -1,49 +1,33 @@
-import { useState, useEffect } from 'react';
-import { FlatList, Text, TouchableOpacity, View, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import { useState } from 'react';
+import { FlatList, Text, TouchableOpacity, View, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { usePlans } from '../hooks';
 import { apiClient, WorkoutPlan } from '../services/api';
+import {
+  LoadingSpinner,
+  ErrorState,
+  EmptyState,
+  createRefreshControl,
+  Card,
+  Badge,
+  Button,
+  LoadingOverlay,
+} from '../components';
 
 export function PlansScreen() {
-  const [workoutPlans, setWorkoutPlans] = useState<WorkoutPlan[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { plans, isLoading, isRefreshing, error, refresh, setPlans } = usePlans();
   const [activatingPlanId, setActivatingPlanId] = useState<string | null>(null);
-
-  const fetchWorkoutPlans = async () => {
-    try {
-      setError(null);
-      const plans = await apiClient.getWorkoutPlans();
-      setWorkoutPlans(plans);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load plans');
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchWorkoutPlans();
-  }, []);
-
-  const onRefresh = () => {
-    setIsRefreshing(true);
-    fetchWorkoutPlans();
-  };
 
   const toggleActivePlan = async (plan: WorkoutPlan) => {
     try {
       setActivatingPlanId(plan.id);
       
-      // Jeśli plan jest już aktywny, deaktywuj go
-      // Jeśli plan nie jest aktywny, aktywuj go (i deaktywuj inne)
       const newActiveState = !plan.isActive;
 
-      // Najpierw deaktywuj wszystkie plany jeśli aktywujemy nowy
+      // First deactivate all other plans if activating a new one
       if (newActiveState) {
-        const activePlan = workoutPlans.find(p => p.isActive && p.id !== plan.id);
+        const activePlan = plans.find(p => p.isActive && p.id !== plan.id);
         if (activePlan) {
           await apiClient.updateWorkoutPlan(activePlan.id, {
             name: activePlan.name,
@@ -54,7 +38,7 @@ export function PlansScreen() {
         }
       }
 
-      // Zaktualizuj aktualny plan
+      // Update current plan
       await apiClient.updateWorkoutPlan(plan.id, {
         name: plan.name,
         description: plan.description,
@@ -62,8 +46,11 @@ export function PlansScreen() {
         isActive: newActiveState,
       });
 
-      // Odśwież listę planów
-      await fetchWorkoutPlans();
+      // Optimistically update UI
+      setPlans(prev => prev.map(p => ({
+        ...p,
+        isActive: p.id === plan.id ? newActiveState : (newActiveState ? false : p.isActive),
+      })));
       
       Alert.alert(
         'Sukces',
@@ -74,108 +61,109 @@ export function PlansScreen() {
     } catch (err) {
       Alert.alert('Błąd', 'Nie udało się zmienić statusu planu');
       console.error('Toggle active plan error:', err);
+      // Refresh to get the actual state
+      refresh();
     } finally {
       setActivatingPlanId(null);
     }
   };
 
-  return (
-    <SafeAreaView className='flex-1 bg-slate-900'>
-      <View className='flex-1 px-6 pt-4'>
-        <View className='flex-row justify-between items-center mb-6'>
-          <Text className='text-2xl font-bold text-white'>
-            Plany Treningowe
+  const renderPlanItem = ({ item }: { item: WorkoutPlan }) => (
+    <Card variant={item.isActive ? 'active' : 'default'}>
+      <TouchableOpacity
+        onPress={() => router.push(`/manage-plan/${item.id}`)}
+        activeOpacity={0.7}
+      >
+        <View className="flex-row items-start justify-between mb-2">
+          <Text className="text-xl font-bold text-white flex-1 mr-2">
+            {item.name}
           </Text>
+          {item.isActive && <Badge label="AKTYWNY" variant="info" />}
+        </View>
+        
+        {item.description ? (
+          <Text className="text-gray-400 mb-3 text-base" numberOfLines={2}>
+            {item.description}
+          </Text>
+        ) : null}
+        
+        <View className="flex-row flex-wrap gap-2 mb-4">
+          <View className="bg-slate-700 px-3 py-1 rounded-full">
+            <Text className="text-gray-300 text-sm">
+              📅 {item.trainingDaysCount} dni
+            </Text>
+          </View>
+          <View className="bg-slate-700 px-3 py-1 rounded-full">
+            <Text className="text-gray-300 text-sm">
+              ⏱️ {item.weekDuration} tygodni
+            </Text>
+          </View>
+          <View className="bg-slate-700 px-3 py-1 rounded-full">
+            <Text className="text-gray-300 text-sm">
+              🏋️ {item.workoutSessionsCount} sesji
+            </Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+      
+      <Button
+        label={item.isActive ? '✓ Plan Aktywny' : 'Aktywuj Plan'}
+        onPress={() => toggleActivePlan(item)}
+        variant={item.isActive ? 'secondary' : 'primary'}
+        loading={activatingPlanId === item.id}
+        fullWidth
+      />
+    </Card>
+  );
+
+  return (
+    <SafeAreaView className="flex-1 bg-slate-900">
+      <LoadingOverlay 
+        visible={activatingPlanId !== null} 
+        message="Aktualizowanie planu..." 
+      />
+      
+      <View className="flex-1 px-6 pt-4">
+        {/* Header */}
+        <View className="flex-row justify-between items-center mb-6">
+          <View>
+            <Text className="text-2xl font-bold text-white">
+              Plany Treningowe
+            </Text>
+            <Text className="text-gray-400 text-sm mt-1">
+              {plans.length} {plans.length === 1 ? 'plan' : 'planów'}
+            </Text>
+          </View>
           <TouchableOpacity
             onPress={() => router.push('/create-plan')}
-            className='bg-purple-600 rounded-lg px-4 py-2'
+            className="bg-purple-600 rounded-lg px-4 py-3"
           >
-            <Text className='text-white font-semibold'>+ Nowy Plan</Text>
+            <Text className="text-white font-semibold">+ Nowy Plan</Text>
           </TouchableOpacity>
         </View>
 
+        {/* Content */}
         {isLoading ? (
-          <View className='flex-1 justify-center items-center'>
-            <ActivityIndicator size='large' color='#AB8BFF' />
-          </View>
+          <LoadingSpinner message="Ładowanie planów..." />
         ) : error ? (
-          <View className='bg-red-900/20 border border-red-500 rounded-xl p-6'>
-            <Text className='text-red-400 text-base'>{error}</Text>
-            <TouchableOpacity
-              onPress={fetchWorkoutPlans}
-              className='mt-4 bg-red-500 rounded-lg py-2 px-4 self-start'
-            >
-              <Text className='text-white font-semibold'>Spróbuj ponownie</Text>
-            </TouchableOpacity>
-          </View>
+          <ErrorState message={error} onRetry={refresh} />
         ) : (
           <FlatList
-            refreshControl={
-              <RefreshControl
-                refreshing={isRefreshing}
-                onRefresh={onRefresh}
-                tintColor='#AB8BFF'
-              />
-            }
-            data={workoutPlans}
+            refreshControl={createRefreshControl(isRefreshing, refresh)}
+            data={plans}
             keyExtractor={(plan) => plan.id}
-            ItemSeparatorComponent={() => <View className='h-4' />}
-            renderItem={({ item }) => (
-              <View
-                className={`rounded-xl p-6 border-2 ${
-                  item.isActive
-                    ? 'bg-slate-700 border-purple-500'
-                    : 'bg-slate-800 border-gray-600'
-                }`}
-              >
-                <TouchableOpacity
-                  onPress={() => {
-                    router.push(`/manage-plan/${item.id}`);
-                  }}
-                >
-                  <Text className='text-xl font-bold text-white mb-2'>
-                    {item.name}
-                  </Text>
-                  {item.description ? (
-                    <Text className='text-gray-400 mb-2 text-base'>
-                      {item.description}
-                    </Text>
-                  ) : null}
-                  <Text className='text-gray-200 text-sm mb-3'>
-                    {item.trainingDaysCount} dni treningowych •{' '}
-                    {item.weekDuration}-tygodniowy blok
-                  </Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    toggleActivePlan(item);
-                  }}
-                  disabled={activatingPlanId === item.id}
-                  className={`rounded-lg py-3 px-4 ${
-                    item.isActive
-                      ? 'bg-slate-600 border border-gray-500'
-                      : 'bg-purple-600'
-                  }`}
-                >
-                  {activatingPlanId === item.id ? (
-                    <ActivityIndicator size='small' color='#FFFFFF' />
-                  ) : (
-                    <Text className='text-white font-semibold text-center'>
-                      {item.isActive ? '✓ Plan Aktywny' : 'Aktywuj Plan'}
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            )}
+            ItemSeparatorComponent={() => <View className="h-4" />}
+            renderItem={renderPlanItem}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 20 }}
             ListEmptyComponent={
-              <View className='bg-slate-800 rounded-xl p-6 items-center'>
-                <Text className='text-gray-400 text-base text-center'>
-                  Brak planów treningowych.{' '}
-                  Kliknij &ldquo;+ Nowy Plan&rdquo; aby stworzyć swój pierwszy plan.
-                </Text>
-              </View>
+              <EmptyState
+                icon="📋"
+                title="Brak planów treningowych"
+                message='Kliknij "+ Nowy Plan" aby stworzyć swój pierwszy plan treningowy.'
+                actionLabel="Utwórz Plan"
+                onAction={() => router.push('/create-plan')}
+              />
             }
           />
         )}

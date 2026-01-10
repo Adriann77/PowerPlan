@@ -1,14 +1,25 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
   SafeAreaView,
+  ScrollView,
   Text,
   View,
+  Dimensions,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { apiClient, WorkoutPlan, WorkoutSession } from '../services/api';
+import {
+  LoadingSpinner,
+  ErrorState,
+  EmptyState,
+  createRefreshControl,
+  FilterChip,
+  StatCard,
+} from '../components';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const CHART_HEIGHT = 150;
+const CHART_PADDING = 40;
 
 export function ProgressScreen() {
   const [activePlan, setActivePlan] = useState<WorkoutPlan | null>(null);
@@ -16,10 +27,17 @@ export function ProgressScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Filters
+  const [selectedTrainingDayId, setSelectedTrainingDayId] = useState<string | null>(null);
+  const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null);
 
-  const fetchProgress = useCallback(async () => {
+  const fetchProgress = useCallback(async (isRefresh = false) => {
     try {
+      if (!isRefresh) setIsLoading(true);
+      else setIsRefreshing(true);
       setError(null);
+      
       const plans = await apiClient.getWorkoutPlans();
       const active = plans.find((p) => p.isActive) ?? null;
       setActivePlan(active);
@@ -32,7 +50,9 @@ export function ProgressScreen() {
       const history = await apiClient.getWorkoutSessionHistory(active.id);
       setSessions(history.filter((s) => s.isCompleted));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Nie udało się załadować postępu');
+      setError(
+        e instanceof Error ? e.message : 'Nie udało się załadować postępu',
+      );
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -45,177 +65,348 @@ export function ProgressScreen() {
     }, [fetchProgress]),
   );
 
-  const onRefresh = () => {
-    setIsRefreshing(true);
-    fetchProgress();
-  };
+  const onRefresh = () => fetchProgress(true);
 
-  type ExerciseWeekPoint = {
-    week: number;
-    weight: number | null;
-  };
-
-  type ExerciseSeries = {
-    exerciseId: string;
-    exerciseName: string;
-    points: ExerciseWeekPoint[];
-    maxWeight: number;
-  };
-
-  const exerciseSeries = useMemo<ExerciseSeries[]>(() => {
-    if (!activePlan) return [];
-
-    // For each exerciseId+week, take the latest completed session weight.
-    const byKey = new Map<
-      string,
-      { weight: number | null; completedAt: number; exerciseName: string }
-    >();
-
+  // Get unique training days from sessions
+  const trainingDays = useMemo(() => {
+    const daysMap = new Map<string, string>();
     for (const session of sessions) {
-      const completedAtMs = session.completedAt
-        ? new Date(session.completedAt).getTime()
-        : 0;
+      if (!daysMap.has(session.trainingDayId)) {
+        daysMap.set(session.trainingDayId, session.trainingDayName || `Dzień ${session.trainingDayId}`);
+      }
+    }
+    return Array.from(daysMap.entries()).map(([id, name]) => ({ id, name }));
+  }, [sessions]);
 
-      for (const log of session.exerciseLogs) {
-        const w =
-          log.startingWeight === null || log.startingWeight === undefined
-            ? null
-            : Number(log.startingWeight);
-        const key = `${log.exerciseId}::${session.weekNumber}`;
+  // Get exercises for selected training day
+  const availableExercises = useMemo(() => {
+    if (!selectedTrainingDayId) return [];
+    
+    const exercisesMap = new Map<string, string>();
+    for (const session of sessions) {
+      if (session.trainingDayId === selectedTrainingDayId) {
+        for (const log of session.exerciseLogs) {
+          if (!exercisesMap.has(log.exerciseId)) {
+            exercisesMap.set(log.exerciseId, log.exerciseName || log.exerciseId);
+          }
+        }
+      }
+    }
+    return Array.from(exercisesMap.entries()).map(([id, name]) => ({ id, name }));
+  }, [sessions, selectedTrainingDayId]);
 
-        const prev = byKey.get(key);
-        if (!prev || completedAtMs >= prev.completedAt) {
-          byKey.set(key, {
-            weight: Number.isFinite(w as number) ? (w as number) : null,
-            completedAt: completedAtMs,
-            exerciseName: log.exerciseName || log.exerciseId,
-          });
+  // Calculate progress data for selected exercise
+  const exerciseProgressData = useMemo(() => {
+    if (!activePlan || !selectedExerciseId) return null;
+
+    const dataPoints: { week: number; weight: number | null; date: string | null }[] = [];
+    
+    // Initialize all weeks
+    for (let i = 1; i <= activePlan.weekDuration; i++) {
+      dataPoints.push({ week: i, weight: null, date: null });
+    }
+
+    // Fill in data from sessions
+    for (const session of sessions) {
+      if (selectedTrainingDayId && session.trainingDayId !== selectedTrainingDayId) continue;
+      
+      const log = session.exerciseLogs.find(l => l.exerciseId === selectedExerciseId);
+      if (log && log.startingWeight !== null && log.startingWeight !== undefined) {
+        const point = dataPoints.find(p => p.week === session.weekNumber);
+        if (point && (point.weight === null || (session.completedAt && (!point.date || new Date(session.completedAt) > new Date(point.date))))) {
+          point.weight = log.startingWeight;
+          point.date = session.completedAt ?? null;
         }
       }
     }
 
-    // Build per-exercise series across all weeks of the plan.
-    const perExercise = new Map<string, ExerciseSeries>();
-    const weeks = Array.from({ length: activePlan.weekDuration }, (_, i) => i + 1);
-
-    for (const [key, value] of byKey.entries()) {
-      const [exerciseId, weekStr] = key.split('::');
-      const week = Number(weekStr);
-
-      if (!perExercise.has(exerciseId)) {
-        perExercise.set(exerciseId, {
-          exerciseId,
-          exerciseName: value.exerciseName,
-          points: weeks.map((w) => ({ week: w, weight: null })),
-          maxWeight: 0,
-        });
-      }
-
-      const series = perExercise.get(exerciseId)!;
-      const point = series.points.find((p) => p.week === week);
-      if (point) point.weight = value.weight;
+    const weights = dataPoints.filter(p => p.weight !== null).map(p => p.weight as number);
+    const maxWeight = weights.length > 0 ? Math.max(...weights) : 0;
+    const minWeight = weights.length > 0 ? Math.min(...weights) : 0;
+    const latestWeight = weights.length > 0 ? weights[weights.length - 1] : null;
+    const firstWeight = weights.length > 0 ? weights[0] : null;
+    
+    let progressPercentage: number | null = null;
+    if (firstWeight && latestWeight && firstWeight > 0) {
+      progressPercentage = ((latestWeight - firstWeight) / firstWeight) * 100;
     }
 
-    // Compute maxWeight for scaling bars.
-    for (const s of perExercise.values()) {
-      const max = s.points.reduce((acc, p) => {
-        if (p.weight === null) return acc;
-        return Math.max(acc, p.weight);
-      }, 0);
-      s.maxWeight = max;
+    const exerciseName = availableExercises.find(e => e.id === selectedExerciseId)?.name ?? selectedExerciseId;
+
+    return {
+      exerciseName,
+      dataPoints,
+      maxWeight,
+      minWeight,
+      latestWeight,
+      firstWeight,
+      progressPercentage,
+    };
+  }, [activePlan, sessions, selectedTrainingDayId, selectedExerciseId, availableExercises]);
+
+  // Simple line chart component
+  const renderChart = () => {
+    if (!exerciseProgressData) return null;
+
+    const { dataPoints, maxWeight, minWeight } = exerciseProgressData;
+    const points = dataPoints.filter(p => p.weight !== null);
+    
+    if (points.length === 0) {
+      return (
+        <View className="bg-slate-800 rounded-xl p-6 items-center">
+          <Text className="text-gray-400">Brak danych do wyświetlenia wykresu</Text>
+        </View>
+      );
     }
 
-    // Sort by name for stable UI.
-    return Array.from(perExercise.values()).sort((a, b) =>
-      a.exerciseName.localeCompare(b.exerciseName, 'pl'),
+    const chartWidth = SCREEN_WIDTH - 48 - CHART_PADDING * 2;
+    const chartHeight = CHART_HEIGHT;
+    const range = maxWeight - minWeight || 1;
+
+    return (
+      <View className="bg-slate-800 rounded-xl p-4 mb-4">
+        <Text className="text-white font-bold text-lg mb-4">
+          Wykres postępu - {exerciseProgressData.exerciseName}
+        </Text>
+        
+        {/* Chart */}
+        <View style={{ height: chartHeight + 40, position: 'relative' }}>
+          {/* Y-axis labels */}
+          <View style={{ position: 'absolute', left: 0, top: 0, height: chartHeight, justifyContent: 'space-between' }}>
+            <Text className="text-gray-400 text-xs">{maxWeight}kg</Text>
+            <Text className="text-gray-400 text-xs">{Math.round((maxWeight + minWeight) / 2)}kg</Text>
+            <Text className="text-gray-400 text-xs">{minWeight}kg</Text>
+          </View>
+          
+          {/* Chart area */}
+          <View style={{ marginLeft: CHART_PADDING, marginRight: 8, height: chartHeight, position: 'relative' }}>
+            {/* Grid lines */}
+            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+              {[0, 0.5, 1].map((ratio, i) => (
+                <View
+                  key={i}
+                  style={{
+                    position: 'absolute',
+                    top: ratio * chartHeight,
+                    left: 0,
+                    right: 0,
+                    height: 1,
+                    backgroundColor: '#374151',
+                  }}
+                />
+              ))}
+            </View>
+            
+            {/* Data points and lines */}
+            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+              {points.map((point, index) => {
+                const x = (point.week - 1) / (dataPoints.length - 1) * chartWidth;
+                const y = chartHeight - ((point.weight! - minWeight) / range) * chartHeight;
+                
+                return (
+                  <View key={point.week}>
+                    {/* Line to next point */}
+                    {index < points.length - 1 && (() => {
+                      const nextPoint = points[index + 1];
+                      const nextX = (nextPoint.week - 1) / (dataPoints.length - 1) * chartWidth;
+                      const nextY = chartHeight - ((nextPoint.weight! - minWeight) / range) * chartHeight;
+                      const length = Math.sqrt(Math.pow(nextX - x, 2) + Math.pow(nextY - y, 2));
+                      const angle = Math.atan2(nextY - y, nextX - x) * 180 / Math.PI;
+                      
+                      return (
+                        <View
+                          style={{
+                            position: 'absolute',
+                            left: x,
+                            top: y,
+                            width: length,
+                            height: 2,
+                            backgroundColor: '#AB8BFF',
+                            transformOrigin: 'left center',
+                            transform: [{ rotate: `${angle}deg` }],
+                          }}
+                        />
+                      );
+                    })()}
+                    
+                    {/* Point */}
+                    <View
+                      style={{
+                        position: 'absolute',
+                        left: x - 6,
+                        top: y - 6,
+                        width: 12,
+                        height: 12,
+                        borderRadius: 6,
+                        backgroundColor: '#AB8BFF',
+                        borderWidth: 2,
+                        borderColor: '#1e1e2e',
+                      }}
+                    />
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+          
+          {/* X-axis labels */}
+          <View style={{ marginLeft: CHART_PADDING, marginRight: 8, flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+            {dataPoints.map((point) => (
+              <Text key={point.week} className="text-gray-400 text-xs">
+                T{point.week}
+              </Text>
+            ))}
+          </View>
+        </View>
+      </View>
     );
-  }, [activePlan, sessions]);
+  };
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-900">
-      <View className="flex-1 px-6 pt-4">
-        <Text className="text-3xl font-bold text-white mb-2">Postęp</Text>
-        <Text className="text-gray-400 text-base mb-6">
-          Porównanie obciążeń dla każdego ćwiczenia w kolejnych tygodniach.
+    <SafeAreaView className='flex-1 bg-slate-900'>
+      <ScrollView
+        className='flex-1 px-6 pt-4'
+        refreshControl={createRefreshControl(isRefreshing, onRefresh)}
+      >
+        <Text className='text-3xl font-bold text-white mb-2'>Postęp</Text>
+        <Text className='text-gray-400 text-base mb-6'>
+          Śledź swoje postępy w ćwiczeniach
         </Text>
 
         {isLoading ? (
-          <View className="flex-1 justify-center items-center">
-            <ActivityIndicator size="large" color="#AB8BFF" />
-            <Text className="mt-4 text-gray-400">Ładowanie postępu...</Text>
-          </View>
+          <LoadingSpinner message="Ładowanie postępu..." />
         ) : error ? (
-          <View className="bg-red-900/20 border border-red-500 rounded-xl p-6">
-            <Text className="text-red-400 text-base">{error}</Text>
-          </View>
+          <ErrorState message={error} onRetry={onRefresh} />
         ) : !activePlan ? (
-          <View className="bg-slate-800 rounded-xl p-6">
-            <Text className="text-white text-lg font-bold mb-2">
-              Brak aktywnego planu
-            </Text>
-            <Text className="text-gray-400 text-base">
-              Aktywuj plan w zakładce „Plany”, aby zobaczyć postęp.
-            </Text>
-          </View>
+          <EmptyState
+            icon="📊"
+            title="Brak aktywnego planu"
+            message='Aktywuj plan w zakładce "Plany", aby zobaczyć swój postęp.'
+          />
+        ) : sessions.length === 0 ? (
+          <EmptyState
+            icon="🏋️"
+            title="Brak zapisanych treningów"
+            message="Ukończ przynajmniej jeden trening, aby zobaczyć postęp."
+          />
         ) : (
-          <FlatList
-            refreshControl={
-              <RefreshControl
-                refreshing={isRefreshing}
-                onRefresh={onRefresh}
-                tintColor="#AB8BFF"
-              />
-            }
-            data={exerciseSeries}
-            keyExtractor={(item) => item.exerciseId}
-            ItemSeparatorComponent={() => <View className="h-4" />}
-            renderItem={({ item }) => (
-              <View className="bg-slate-800 rounded-xl p-6">
-                <Text className="text-white text-lg font-bold mb-4">
-                  {item.exerciseName}
-                </Text>
+          <View className="pb-8">
+            {/* Training Day Filter */}
+            <View className="mb-4">
+              <Text className="text-white font-semibold mb-3">Wybierz dzień treningowy:</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <FilterChip
+                  label="Wszystkie"
+                  selected={selectedTrainingDayId === null}
+                  onPress={() => {
+                    setSelectedTrainingDayId(null);
+                    setSelectedExerciseId(null);
+                  }}
+                />
+                {trainingDays.map((day) => (
+                  <FilterChip
+                    key={day.id}
+                    label={day.name}
+                    selected={selectedTrainingDayId === day.id}
+                    onPress={() => {
+                      setSelectedTrainingDayId(day.id);
+                      setSelectedExerciseId(null);
+                    }}
+                  />
+                ))}
+              </ScrollView>
+            </View>
 
-                <View className="gap-3">
-                  {item.points.map((p) => {
-                    const w = p.weight;
-                    const ratio =
-                      w === null || item.maxWeight === 0
-                        ? 0
-                        : Math.max(0, Math.min(1, w / item.maxWeight));
-
-                    return (
-                      <View
-                        key={p.week}
-                        className="flex-row items-center"
-                      >
-                        <Text className="text-gray-300 w-20">
-                          Tydzień {p.week}
-                        </Text>
-                        <View className="flex-1 h-3 bg-slate-700 rounded-full overflow-hidden">
-                          <View
-                            style={{ width: `${Math.round(ratio * 100)}%` }}
-                            className="h-3 bg-purple-600"
-                          />
-                        </View>
-                        <Text className="text-gray-200 w-20 text-right">
-                          {w === null ? '—' : `${w} kg`}
-                        </Text>
-                      </View>
-                    );
-                  })}
-                </View>
+            {/* Exercise Filter (only show if training day is selected) */}
+            {selectedTrainingDayId && availableExercises.length > 0 && (
+              <View className="mb-6">
+                <Text className="text-white font-semibold mb-3">Wybierz ćwiczenie:</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {availableExercises.map((exercise) => (
+                    <FilterChip
+                      key={exercise.id}
+                      label={exercise.name}
+                      selected={selectedExerciseId === exercise.id}
+                      onPress={() => setSelectedExerciseId(exercise.id)}
+                    />
+                  ))}
+                </ScrollView>
               </View>
             )}
-            ListEmptyComponent={
-              <View className="bg-slate-800 rounded-xl p-6">
-                <Text className="text-gray-400 text-base">
-                  Brak zapisanych treningów w tym planie.
-                </Text>
+
+            {/* Stats Cards */}
+            {exerciseProgressData && (
+              <View className="flex-row gap-3 mb-4">
+                <StatCard
+                  label="Aktualny ciężar"
+                  value={exerciseProgressData.latestWeight !== null ? `${exerciseProgressData.latestWeight} kg` : '—'}
+                  icon="🏋️"
+                />
+                <StatCard
+                  label="Postęp"
+                  value={exerciseProgressData.progressPercentage !== null 
+                    ? `${exerciseProgressData.progressPercentage > 0 ? '+' : ''}${exerciseProgressData.progressPercentage.toFixed(1)}%` 
+                    : '—'}
+                  trend={exerciseProgressData.progressPercentage !== null 
+                    ? exerciseProgressData.progressPercentage > 0 ? 'up' : exerciseProgressData.progressPercentage < 0 ? 'down' : 'neutral'
+                    : undefined}
+                  icon="📈"
+                />
               </View>
-            }
-          />
+            )}
+
+            {/* Chart */}
+            {selectedExerciseId && renderChart()}
+
+            {/* Week by Week Progress */}
+            {exerciseProgressData && (
+              <View className="mt-4">
+                <Text className="text-white font-bold text-lg mb-4">Szczegóły tygodniowe</Text>
+                {exerciseProgressData.dataPoints.map((point) => (
+                  <View 
+                    key={point.week} 
+                    className="bg-slate-800 rounded-xl p-4 mb-2 flex-row items-center justify-between"
+                  >
+                    <View className="flex-row items-center">
+                      <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
+                        point.weight !== null ? 'bg-purple-600' : 'bg-slate-700'
+                      }`}>
+                        <Text className="text-white font-bold">{point.week}</Text>
+                      </View>
+                      <Text className="text-gray-300">Tydzień {point.week}</Text>
+                    </View>
+                    <View className="items-end">
+                      <Text className={`font-bold ${point.weight !== null ? 'text-white text-lg' : 'text-gray-500'}`}>
+                        {point.weight !== null ? `${point.weight} kg` : '—'}
+                      </Text>
+                      {point.date && (
+                        <Text className="text-gray-500 text-xs">
+                          {new Date(point.date).toLocaleDateString('pl-PL')}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* Hint when no exercise selected */}
+            {!selectedExerciseId && selectedTrainingDayId && (
+              <EmptyState
+                icon="👆"
+                message="Wybierz ćwiczenie powyżej, aby zobaczyć szczegółowy wykres postępu."
+              />
+            )}
+
+            {!selectedTrainingDayId && (
+              <EmptyState
+                icon="👆"
+                message="Wybierz dzień treningowy powyżej, aby zobaczyć dostępne ćwiczenia i postępy."
+              />
+            )}
+          </View>
         )}
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

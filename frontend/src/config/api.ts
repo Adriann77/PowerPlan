@@ -19,7 +19,7 @@ const getApiBaseUrl = () => {
     // return 'http://10.0.2.2:5226';
 
     // For physical device, use your computer's IP:
-    return 'http://192.168.1.23:5226';
+    return 'http://localhost:5226';
   }
 
   // Production mode - replace with your production API URL

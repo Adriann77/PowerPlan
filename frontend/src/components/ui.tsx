@@ -7,8 +7,79 @@ import {
   TouchableOpacity,
   RefreshControl,
   ScrollView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
+// Cross-platform Alert replacement
+type ConfirmDialogProps = {
+  visible: boolean;
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  destructive?: boolean;
+};
+
+export function ConfirmDialog({
+  visible,
+  title,
+  message,
+  confirmLabel = 'OK',
+  cancelLabel = 'Anuluj',
+  onConfirm,
+  onCancel,
+  destructive = false,
+}: ConfirmDialogProps) {
+  return (
+    <Modal
+      transparent
+      visible={visible}
+      animationType='fade'
+      onRequestClose={onCancel}
+    >
+      <TouchableOpacity
+        activeOpacity={1}
+        onPress={onCancel}
+        className='flex-1 items-center justify-center bg-black/70'
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => {}}
+        >
+          <View className='bg-slate-800 rounded-2xl p-6 mx-6 min-w-[300px] max-w-[400px]'>
+            <Text className='text-white text-xl font-bold mb-2 text-center'>
+              {title}
+            </Text>
+            <Text className='text-gray-400 text-base mb-6 text-center'>
+              {message}
+            </Text>
+            <View className='flex-row gap-3'>
+              <TouchableOpacity
+                onPress={onCancel}
+                className='flex-1 bg-slate-600 rounded-lg py-3 px-4'
+              >
+                <Text className='text-white font-semibold text-center'>
+                  {cancelLabel}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={onConfirm}
+                className={`flex-1 rounded-lg py-3 px-4 ${destructive ? 'bg-red-600' : 'bg-purple-600'}`}
+              >
+                <Text className='text-white font-semibold text-center'>
+                  {confirmLabel}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </TouchableOpacity>
+    </Modal>
+  );
+}
 
 // Loading Overlay for full-screen loading states
 type LoadingOverlayProps = {
@@ -16,15 +87,27 @@ type LoadingOverlayProps = {
   message?: string;
 };
 
-export function LoadingOverlay({ visible, message = 'Ładowanie...' }: LoadingOverlayProps) {
+export function LoadingOverlay({
+  visible,
+  message = 'Ładowanie...',
+}: LoadingOverlayProps) {
   if (!visible) return null;
 
   return (
-    <Modal transparent visible={visible} animationType="fade">
-      <View className="flex-1 items-center justify-center bg-black/70">
-        <View className="bg-slate-800 rounded-2xl p-8 items-center mx-6">
-          <ActivityIndicator size="large" color="#AB8BFF" />
-          <Text className="text-white text-base mt-4 text-center">{message}</Text>
+    <Modal
+      transparent
+      visible={visible}
+      animationType='fade'
+    >
+      <View className='flex-1 items-center justify-center bg-black/70'>
+        <View className='bg-slate-800 rounded-2xl p-8 items-center mx-6'>
+          <ActivityIndicator
+            size='large'
+            color='#AB8BFF'
+          />
+          <Text className='text-white text-base mt-4 text-center'>
+            {message}
+          </Text>
         </View>
       </View>
     </Modal>
@@ -37,11 +120,19 @@ type LoadingSpinnerProps = {
   size?: 'small' | 'large';
 };
 
-export function LoadingSpinner({ message, size = 'large' }: LoadingSpinnerProps) {
+export function LoadingSpinner({
+  message,
+  size = 'large',
+}: LoadingSpinnerProps) {
   return (
-    <View className="flex-1 items-center justify-center py-20">
-      <ActivityIndicator size={size} color="#AB8BFF" />
-      {message && <Text className="text-gray-400 mt-4 text-base">{message}</Text>}
+    <View className='flex-1 items-center justify-center py-20'>
+      <ActivityIndicator
+        size={size}
+        color='#AB8BFF'
+      />
+      {message && (
+        <Text className='text-gray-400 mt-4 text-base'>{message}</Text>
+      )}
     </View>
   );
 }
@@ -53,16 +144,20 @@ type ErrorStateProps = {
   retryLabel?: string;
 };
 
-export function ErrorState({ message, onRetry, retryLabel = 'Spróbuj ponownie' }: ErrorStateProps) {
+export function ErrorState({
+  message,
+  onRetry,
+  retryLabel = 'Spróbuj ponownie',
+}: ErrorStateProps) {
   return (
-    <View className="bg-red-900/20 border border-red-500 rounded-xl p-6">
-      <Text className="text-red-400 text-base mb-2">{message}</Text>
+    <View className='bg-red-900/20 border border-red-500 rounded-xl p-6'>
+      <Text className='text-red-400 text-base mb-2'>{message}</Text>
       {onRetry && (
         <TouchableOpacity
           onPress={onRetry}
-          className="mt-4 bg-red-500 rounded-lg py-3 px-4 self-start"
+          className='mt-4 bg-red-500 rounded-lg py-3 px-4 self-start'
         >
-          <Text className="text-white font-semibold">{retryLabel}</Text>
+          <Text className='text-white font-semibold'>{retryLabel}</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -77,17 +172,26 @@ type EmptyStateProps = {
   onAction?: () => void;
 };
 
-export function EmptyState({ title, message, actionLabel, onAction }: EmptyStateProps) {
+export function EmptyState({
+  title,
+  message,
+  actionLabel,
+  onAction,
+}: EmptyStateProps) {
   return (
-    <View className="bg-slate-800 rounded-xl p-6 items-center">
-      {title && <Text className="text-white text-lg font-bold mb-2 text-center">{title}</Text>}
-      <Text className="text-gray-400 text-base text-center">{message}</Text>
+    <View className='bg-slate-800 rounded-xl p-6 items-center'>
+      {title && (
+        <Text className='text-white text-lg font-bold mb-2 text-center'>
+          {title}
+        </Text>
+      )}
+      <Text className='text-gray-400 text-base text-center'>{message}</Text>
       {actionLabel && onAction && (
         <TouchableOpacity
           onPress={onAction}
-          className="mt-4 bg-purple-600 rounded-lg py-3 px-6"
+          className='mt-4 bg-purple-600 rounded-lg py-3 px-6'
         >
-          <Text className="text-white font-semibold">{actionLabel}</Text>
+          <Text className='text-white font-semibold'>{actionLabel}</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -95,12 +199,15 @@ export function EmptyState({ title, message, actionLabel, onAction }: EmptyState
 }
 
 // Custom RefreshControl factory
-export function createRefreshControl(refreshing: boolean, onRefresh: () => void) {
+export function createRefreshControl(
+  refreshing: boolean,
+  onRefresh: () => void,
+) {
   return (
     <RefreshControl
       refreshing={refreshing}
       onRefresh={onRefresh}
-      tintColor="#AB8BFF"
+      tintColor='#AB8BFF'
       colors={['#AB8BFF']}
     />
   );
@@ -113,12 +220,18 @@ type SectionHeaderProps = {
   rightElement?: React.ReactNode;
 };
 
-export function SectionHeader({ title, subtitle, rightElement }: SectionHeaderProps) {
+export function SectionHeader({
+  title,
+  subtitle,
+  rightElement,
+}: SectionHeaderProps) {
   return (
-    <View className="flex-row items-center justify-between mb-4">
-      <View className="flex-1">
-        <Text className="text-xl font-bold text-white">{title}</Text>
-        {subtitle && <Text className="text-gray-400 text-sm mt-1">{subtitle}</Text>}
+    <View className='flex-row items-center justify-between mb-4'>
+      <View className='flex-1'>
+        <Text className='text-xl font-bold text-white'>{title}</Text>
+        {subtitle && (
+          <Text className='text-gray-400 text-sm mt-1'>{subtitle}</Text>
+        )}
       </View>
       {rightElement}
     </View>
@@ -133,7 +246,12 @@ type CardProps = {
   className?: string;
 };
 
-export function Card({ children, variant = 'default', onPress, className = '' }: CardProps) {
+export function Card({
+  children,
+  variant = 'default',
+  onPress,
+  className = '',
+}: CardProps) {
   const variantStyles = {
     default: 'bg-slate-800 border-gray-700',
     active: 'bg-slate-700 border-purple-500',
@@ -141,14 +259,19 @@ export function Card({ children, variant = 'default', onPress, className = '' }:
   };
 
   const content = (
-    <View className={`rounded-xl p-5 border ${variantStyles[variant]} ${className}`}>
+    <View
+      className={`rounded-xl p-5 border ${variantStyles[variant]} ${className}`}
+    >
       {children}
     </View>
   );
 
   if (onPress) {
     return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.7}
+      >
         {content}
       </TouchableOpacity>
     );
@@ -173,7 +296,7 @@ export function Badge({ label, variant = 'default' }: BadgeProps) {
 
   return (
     <View className={`px-3 py-1 rounded-full ${variantStyles[variant]}`}>
-      <Text className="text-white text-xs font-semibold">{label}</Text>
+      <Text className='text-white text-xs font-semibold'>{label}</Text>
     </View>
   );
 }
@@ -231,9 +354,14 @@ export function Button({
       `}
     >
       {loading ? (
-        <ActivityIndicator size="small" color="#ffffff" />
+        <ActivityIndicator
+          size='small'
+          color='#ffffff'
+        />
       ) : (
-        <Text className={`text-white font-semibold ${textSizes[size]}`}>{label}</Text>
+        <Text className={`text-white font-semibold ${textSizes[size]}`}>
+          {label}
+        </Text>
       )}
     </TouchableOpacity>
   );
@@ -256,9 +384,9 @@ export function ProgressBar({
   const clampedProgress = Math.max(0, Math.min(100, progress));
 
   return (
-    <View className="w-full">
+    <View className='w-full'>
       <View
-        className="w-full bg-slate-700 rounded-full overflow-hidden"
+        className='w-full bg-slate-700 rounded-full overflow-hidden'
         style={{ height }}
       >
         <View
@@ -267,7 +395,7 @@ export function ProgressBar({
         />
       </View>
       {showLabel && (
-        <Text className="text-gray-400 text-xs mt-1 text-right">
+        <Text className='text-gray-400 text-xs mt-1 text-right'>
           {Math.round(clampedProgress)}%
         </Text>
       )}
@@ -284,7 +412,13 @@ type StatCardProps = {
   trendValue?: string;
 };
 
-export function StatCard({ label, value, subtitle, trend, trendValue }: StatCardProps) {
+export function StatCard({
+  label,
+  value,
+  subtitle,
+  trend,
+  trendValue,
+}: StatCardProps) {
   const trendColors = {
     up: 'text-green-400',
     down: 'text-red-400',
@@ -298,19 +432,21 @@ export function StatCard({ label, value, subtitle, trend, trendValue }: StatCard
   };
 
   return (
-    <View className="bg-slate-800 rounded-xl p-4 flex-1">
-      <View className="flex-row items-center justify-between mb-2">
-        <Text className="text-gray-400 text-sm">{label}</Text>
+    <View className='bg-slate-800 rounded-xl p-4 flex-1'>
+      <View className='flex-row items-center justify-between mb-2'>
+        <Text className='text-gray-400 text-sm'>{label}</Text>
       </View>
-      <Text className="text-white text-2xl font-bold">{value}</Text>
+      <Text className='text-white text-2xl font-bold'>{value}</Text>
       {(subtitle || (trend && trendValue)) && (
-        <View className="flex-row items-center mt-1">
+        <View className='flex-row items-center mt-1'>
           {trend && trendValue && (
             <Text className={`text-sm ${trendColors[trend]} mr-2`}>
               {trendIcons[trend]} {trendValue}
             </Text>
           )}
-          {subtitle && <Text className="text-gray-500 text-sm">{subtitle}</Text>}
+          {subtitle && (
+            <Text className='text-gray-500 text-sm'>{subtitle}</Text>
+          )}
         </View>
       )}
     </View>
@@ -330,12 +466,16 @@ export function FilterChip({ label, selected, onPress }: FilterChipProps) {
       onPress={onPress}
       className={`
         px-4 py-2 rounded-full mr-2 mb-2 border
-        ${selected 
-          ? 'bg-purple-600 border-purple-500' 
-          : 'bg-slate-800 border-gray-600'}
+        ${
+          selected
+            ? 'bg-purple-600 border-purple-500'
+            : 'bg-slate-800 border-gray-600'
+        }
       `}
     >
-      <Text className={`text-sm font-medium ${selected ? 'text-white' : 'text-gray-300'}`}>
+      <Text
+        className={`text-sm font-medium ${selected ? 'text-white' : 'text-gray-300'}`}
+      >
         {label}
       </Text>
     </TouchableOpacity>
@@ -361,46 +501,62 @@ type SelectProps = {
   onChange: (value: string | null) => void;
 };
 
-export function Select({ label, placeholder = 'Wybierz...', options, value, onChange }: SelectProps) {
+export function Select({
+  label,
+  placeholder = 'Wybierz...',
+  options,
+  value,
+  onChange,
+}: SelectProps) {
   const [isOpen, setIsOpen] = useState(false);
-  
-  const selectedOption = options.find(opt => opt.value === value);
+
+  const selectedOption = options.find((opt) => opt.value === value);
   const displayText = selectedOption?.label || placeholder;
 
   return (
     <View>
-      {label && (
-        <Text className="text-white font-semibold mb-2">{label}</Text>
-      )}
+      {label && <Text className='text-white font-semibold mb-2'>{label}</Text>}
       <TouchableOpacity
         onPress={() => setIsOpen(true)}
-        className="flex-row items-center justify-between bg-slate-800 border border-gray-600 rounded-xl px-4 py-3"
+        className='flex-row items-center justify-between bg-slate-800 border border-gray-600 rounded-xl px-4 py-3'
       >
-        <Text className={`text-base ${selectedOption ? 'text-white' : 'text-gray-400'}`}>
+        <Text
+          className={`text-base ${selectedOption ? 'text-white' : 'text-gray-400'}`}
+        >
           {displayText}
         </Text>
-        <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
+        <Ionicons
+          name='chevron-down'
+          size={20}
+          color='#9CA3AF'
+        />
       </TouchableOpacity>
 
       <Modal
         visible={isOpen}
         transparent
-        animationType="fade"
+        animationType='fade'
         onRequestClose={() => setIsOpen(false)}
       >
-        <TouchableOpacity 
+        <TouchableOpacity
           activeOpacity={1}
           onPress={() => setIsOpen(false)}
-          className="flex-1 bg-black/60 justify-end"
+          className='flex-1 bg-black/60 justify-end'
         >
-          <View className="bg-slate-800 rounded-t-3xl max-h-[60%]">
-            <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-700">
-              <Text className="text-lg font-bold text-white">{label || 'Wybierz'}</Text>
+          <View className='bg-slate-800 rounded-t-3xl max-h-[60%]'>
+            <View className='flex-row items-center justify-between px-6 py-4 border-b border-gray-700'>
+              <Text className='text-lg font-bold text-white'>
+                {label || 'Wybierz'}
+              </Text>
               <TouchableOpacity onPress={() => setIsOpen(false)}>
-                <Ionicons name="close" size={24} color="#9CA3AF" />
+                <Ionicons
+                  name='close'
+                  size={24}
+                  color='#9CA3AF'
+                />
               </TouchableOpacity>
             </View>
-            <ScrollView className="max-h-80">
+            <ScrollView className='max-h-80'>
               {options.map((option, index) => (
                 <TouchableOpacity
                   key={option.value ?? 'null'}
@@ -412,16 +568,22 @@ export function Select({ label, placeholder = 'Wybierz...', options, value, onCh
                     value === option.value ? 'bg-purple-600/20' : ''
                   }`}
                 >
-                  <Text className={`text-base ${value === option.value ? 'text-purple-400 font-semibold' : 'text-white'}`}>
+                  <Text
+                    className={`text-base ${value === option.value ? 'text-purple-400 font-semibold' : 'text-white'}`}
+                  >
                     {option.label}
                   </Text>
                   {value === option.value && (
-                    <Ionicons name="checkmark" size={20} color="#AB8BFF" />
+                    <Ionicons
+                      name='checkmark'
+                      size={20}
+                      color='#AB8BFF'
+                    />
                   )}
                 </TouchableOpacity>
               ))}
             </ScrollView>
-            <View className="h-8" />
+            <View className='h-8' />
           </View>
         </TouchableOpacity>
       </Modal>

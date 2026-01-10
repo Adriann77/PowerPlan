@@ -10,28 +10,28 @@ PowerPlan is a full-stack workout planning application built with modern technol
 
 ### Backend
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **.NET** | 8.0 | Runtime and SDK |
-| **ASP.NET Core** | 8.0 | Web API framework |
-| **Entity Framework Core** | 8.0.8 | ORM for database operations |
-| **SQLite** | - | Database engine |
-| **JWT Bearer Authentication** | 8.0.10 | Token-based authentication |
-| **BCrypt.Net-Next** | 4.0.3 | Password hashing |
-| **Swashbuckle (Swagger)** | 10.0.1 | API documentation |
+| Technology                    | Version | Purpose                     |
+| ----------------------------- | ------- | --------------------------- |
+| **.NET**                      | 8.0     | Runtime and SDK             |
+| **ASP.NET Core**              | 8.0     | Web API framework           |
+| **Entity Framework Core**     | 8.0.8   | ORM for database operations |
+| **SQLite**                    | -       | Database engine             |
+| **JWT Bearer Authentication** | 8.0.10  | Token-based authentication  |
+| **BCrypt.Net-Next**           | 4.0.3   | Password hashing            |
+| **Swashbuckle (Swagger)**     | 10.0.1  | API documentation           |
 
 ### Frontend
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **React Native** | 0.81.5 | Cross-platform mobile framework |
-| **Expo** | 54.0.31 | React Native development platform |
-| **Expo Router** | 6.0.21 | File-based routing |
-| **TypeScript** | - | Type-safe JavaScript |
-| **NativeWind** | 4.2.1 | Tailwind CSS for React Native |
-| **React Hook Form** | 7.66.1 | Form management |
-| **React Navigation** | 7.x | Navigation library |
-| **AsyncStorage** | 2.2.0 | Local data persistence |
+| Technology           | Version | Purpose                           |
+| -------------------- | ------- | --------------------------------- |
+| **React Native**     | 0.81.5  | Cross-platform mobile framework   |
+| **Expo**             | 54.0.31 | React Native development platform |
+| **Expo Router**      | 6.0.21  | File-based routing                |
+| **TypeScript**       | -       | Type-safe JavaScript              |
+| **NativeWind**       | 4.2.1   | Tailwind CSS for React Native     |
+| **React Hook Form**  | 7.66.1  | Form management                   |
+| **React Navigation** | 7.x     | Navigation library                |
+| **AsyncStorage**     | 2.2.0   | Local data persistence            |
 
 ---
 
@@ -76,6 +76,7 @@ backend/PowerPlanAPI/
 ### Data Models
 
 #### User
+
 - `Id` (GUID) - Primary key
 - `Username` (string) - Unique username
 - `Email` (string) - User email
@@ -83,6 +84,7 @@ backend/PowerPlanAPI/
 - `CreatedAt` (DateTime) - Account creation timestamp
 
 #### WorkoutPlan
+
 - `Id` (string) - Primary key
 - `Name` (string) - Plan name
 - `Description` (string) - Optional description
@@ -91,6 +93,7 @@ backend/PowerPlanAPI/
 - `TrainingDays` - Navigation property
 
 #### TrainingDay
+
 - `Id` (string) - Primary key
 - `Name` (string) - Day name (e.g., "Push Day")
 - `Order` (int) - Display order
@@ -98,6 +101,7 @@ backend/PowerPlanAPI/
 - `Exercises` - Navigation property
 
 #### Exercise
+
 - `Id` (string) - Primary key
 - `Name` (string) - Exercise name
 - `Sets` (int) - Number of sets
@@ -107,6 +111,7 @@ backend/PowerPlanAPI/
 - `TrainingDayId` (string) - Foreign key
 
 #### WorkoutSession
+
 - `Id` (string) - Primary key
 - `UserId` (GUID) - Foreign key to User
 - `TrainingDayId` (string) - Foreign key
@@ -115,6 +120,7 @@ backend/PowerPlanAPI/
 - `ExerciseLogs` - Navigation property
 
 #### ExerciseLog
+
 - `Id` (string) - Primary key
 - `ExerciseId` (string) - Foreign key
 - `WorkoutSessionId` (string) - Foreign key
@@ -128,28 +134,28 @@ The application uses JWT (JSON Web Token) authentication:
 
 1. **Token Generation**: Tokens are generated on successful login with configurable expiration
 2. **Token Validation**: Validates issuer, audience, lifetime, and signing key
-3. **Token Storage**: 
+3. **Token Storage**:
    - React Native: Stored in AsyncStorage with Bearer header
    - Web: Stored in HTTP-only cookies (fallback)
 
 ### API Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/auth/register` | POST | User registration |
-| `/api/auth/login` | POST | User login |
-| `/api/auth/me` | GET | Get current user |
-| `/api/workoutplans` | GET | Get user's workout plans |
-| `/api/workoutplans` | POST | Create workout plan |
-| `/api/workoutplans/{id}` | PUT | Update workout plan |
-| `/api/workoutplans/{id}` | DELETE | Delete workout plan |
-| `/api/workoutplans/{id}/activate` | POST | Activate plan |
-| `/api/trainingdays/{id}` | GET | Get training day |
-| `/api/trainingdays/{id}` | PUT | Update training day |
-| `/api/exercises/{id}` | PUT | Update exercise |
-| `/api/workoutsessions` | GET | Get workout sessions |
-| `/api/workoutsessions` | POST | Create workout session |
-| `/api/health` | GET | Health check |
+| Endpoint                          | Method | Description              |
+| --------------------------------- | ------ | ------------------------ |
+| `/api/auth/register`              | POST   | User registration        |
+| `/api/auth/login`                 | POST   | User login               |
+| `/api/auth/me`                    | GET    | Get current user         |
+| `/api/workoutplans`               | GET    | Get user's workout plans |
+| `/api/workoutplans`               | POST   | Create workout plan      |
+| `/api/workoutplans/{id}`          | PUT    | Update workout plan      |
+| `/api/workoutplans/{id}`          | DELETE | Delete workout plan      |
+| `/api/workoutplans/{id}/activate` | POST   | Activate plan            |
+| `/api/trainingdays/{id}`          | GET    | Get training day         |
+| `/api/trainingdays/{id}`          | PUT    | Update training day      |
+| `/api/exercises/{id}`             | PUT    | Update exercise          |
+| `/api/workoutsessions`            | GET    | Get workout sessions     |
+| `/api/workoutsessions`            | POST   | Create workout session   |
+| `/api/health`                     | GET    | Health check             |
 
 ---
 
@@ -196,15 +202,15 @@ The application uses **NativeWind** (Tailwind CSS for React Native):
 
 ### Color Palette
 
-| Color | Hex | Usage |
-|-------|-----|-------|
-| Background | `#030014` | Main background |
-| Card | `slate-800` | Card backgrounds |
-| Primary | `#AB8BFF` | Accent color, active states |
-| Text Primary | `white` | Main text |
-| Text Secondary | `#9ca4ab` | Secondary text |
-| Success | `green-600` | Success states |
-| Error | `red-600` | Error states |
+| Color          | Hex         | Usage                       |
+| -------------- | ----------- | --------------------------- |
+| Background     | `#030014`   | Main background             |
+| Card           | `slate-800` | Card backgrounds            |
+| Primary        | `#AB8BFF`   | Accent color, active states |
+| Text Primary   | `white`     | Main text                   |
+| Text Secondary | `#9ca4ab`   | Secondary text              |
+| Success        | `green-600` | Success states              |
+| Error          | `red-600`   | Error states                |
 
 ### State Management
 
@@ -236,12 +242,14 @@ Using **Expo Router** with file-based routing:
 ## Development Tools
 
 ### Backend
+
 - Visual Studio / VS Code
 - .NET CLI
 - Entity Framework CLI
 - Swagger UI (development)
 
 ### Frontend
+
 - VS Code
 - Expo CLI
 - Metro Bundler

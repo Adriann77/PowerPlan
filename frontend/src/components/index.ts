@@ -13,4 +13,5 @@ export {
   FilterChip,
   Divider,
   Select,
+  ConfirmDialog,
 } from './ui';

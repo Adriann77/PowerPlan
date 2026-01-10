@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   FlatList,
-  Alert,
   TextInput,
   Modal,
   KeyboardAvoidingView,
@@ -24,7 +23,7 @@ import {
   getExerciseCategories, 
   ExerciseTemplate 
 } from '../../src/hooks/usePlans';
-import { LoadingOverlay } from '../../src/components/ui';
+import { LoadingOverlay, ConfirmDialog } from '../../src/components/ui';
 
 type ModalMode = 'custom' | 'template';
 
@@ -65,6 +64,11 @@ export default function ManagePlanScreen() {
     orderNumber: 1,
   });
 
+  // Delete confirmation state
+  const [dayToDelete, setDayToDelete] = useState<string | null>(null);
+  const [exerciseToDelete, setExerciseToDelete] = useState<{ dayId: string; exerciseId: string; name: string } | null>(null);
+  const [showTempoInfo, setShowTempoInfo] = useState(false);
+
   const categories = useMemo(() => getExerciseCategories(), []);
 
   const filteredTemplates = useMemo(() => {
@@ -96,28 +100,27 @@ export default function ManagePlanScreen() {
     return `${digits[0]}-${digits[1]}-${digits[2]}-${digits[3]}`;
   };
 
-  useEffect(() => {
-    if (planId) {
-      fetchTrainingDays();
-    }
-  }, [planId]);
-
   const fetchTrainingDays = async () => {
     try {
       setIsLoading(true);
       const days = await apiClient.getTrainingDays(planId);
       setTrainingDays(days);
     } catch (error) {
-      Alert.alert('Błąd', 'Nie udało się pobrać dni treningowych');
       console.error('Fetch training days error:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    if (planId) {
+      fetchTrainingDays();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planId]);
+
   const addTrainingDay = async () => {
     if (!newDayName.trim()) {
-      Alert.alert('Błąd', 'Nazwa dnia treningowego jest wymagana');
       return;
     }
 
@@ -129,9 +132,7 @@ export default function ManagePlanScreen() {
       setTrainingDays((prev) => [...prev, { ...newDay, exercises: [] }]);
       setNewDayName('');
       setShowAddDayModal(false);
-      Alert.alert('Sukces', 'Dzień treningowy został dodany');
     } catch (error) {
-      Alert.alert('Błąd', 'Nie udało się dodać dnia treningowego');
       console.error('Create training day error:', error);
     } finally {
       setIsSaving(false);
@@ -167,9 +168,7 @@ export default function ManagePlanScreen() {
       );
 
       resetExerciseModal();
-      Alert.alert('Sukces', 'Ćwiczenie zostało dodane');
     } catch (error) {
-      Alert.alert('Błąd', 'Nie udało się dodać ćwiczenia');
       console.error('Create exercise error:', error);
     } finally {
       setIsSaving(false);
@@ -178,7 +177,6 @@ export default function ManagePlanScreen() {
 
   const addCustomExercise = async () => {
     if (!newExercise.name.trim() || !newExercise.reps.trim()) {
-      Alert.alert('Błąd', 'Nazwa ćwiczenia i liczba powtórzeń są wymagane');
       return;
     }
 
@@ -203,31 +201,20 @@ export default function ManagePlanScreen() {
   };
 
   // Delete Training Day
-  const deleteTrainingDay = async (dayId: string) => {
-    Alert.alert(
-      'Usuń dzień treningowy',
-      'Czy na pewno chcesz usunąć ten dzień treningowy? Wszystkie ćwiczenia zostaną usunięte.',
-      [
-        { text: 'Anuluj', style: 'cancel' },
-        {
-          text: 'Usuń',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setIsSaving(true);
-              await apiClient.deleteTrainingDay(planId, dayId);
-              setTrainingDays((prev) => prev.filter((day) => day.id !== dayId));
-              Alert.alert('Sukces', 'Dzień treningowy został usunięty');
-            } catch (error) {
-              Alert.alert('Błąd', 'Nie udało się usunąć dnia treningowego');
-              console.error('Delete training day error:', error);
-            } finally {
-              setIsSaving(false);
-            }
-          },
-        },
-      ]
-    );
+  const confirmDeleteTrainingDay = async () => {
+    if (!dayToDelete) return;
+    
+    try {
+      setIsSaving(true);
+      const dayId = dayToDelete;
+      setDayToDelete(null);
+      await apiClient.deleteTrainingDay(planId, dayId);
+      setTrainingDays((prev) => prev.filter((day) => day.id !== dayId));
+    } catch (error) {
+      console.error('Delete training day error:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Edit Training Day
@@ -239,7 +226,6 @@ export default function ManagePlanScreen() {
 
   const updateTrainingDay = async () => {
     if (!selectedDayId || !editDayName.trim()) {
-      Alert.alert('Błąd', 'Nazwa dnia treningowego jest wymagana');
       return;
     }
 
@@ -256,9 +242,7 @@ export default function ManagePlanScreen() {
       setShowEditDayModal(false);
       setSelectedDayId(null);
       setEditDayName('');
-      Alert.alert('Sukces', 'Dzień treningowy został zaktualizowany');
     } catch (error) {
-      Alert.alert('Błąd', 'Nie udało się zaktualizować dnia treningowego');
       console.error('Update training day error:', error);
     } finally {
       setIsSaving(false);
@@ -266,37 +250,26 @@ export default function ManagePlanScreen() {
   };
 
   // Delete Exercise
-  const deleteExercise = async (dayId: string, exerciseId: string) => {
-    Alert.alert(
-      'Usuń ćwiczenie',
-      'Czy na pewno chcesz usunąć to ćwiczenie?',
-      [
-        { text: 'Anuluj', style: 'cancel' },
-        {
-          text: 'Usuń',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setIsSaving(true);
-              await apiClient.deleteExercise(dayId, exerciseId);
-              setTrainingDays((prev) =>
-                prev.map((day) =>
-                  day.id === dayId
-                    ? { ...day, exercises: day.exercises.filter((e) => e.id !== exerciseId) }
-                    : day
-                )
-              );
-              Alert.alert('Sukces', 'Ćwiczenie zostało usunięte');
-            } catch (error) {
-              Alert.alert('Błąd', 'Nie udało się usunąć ćwiczenia');
-              console.error('Delete exercise error:', error);
-            } finally {
-              setIsSaving(false);
-            }
-          },
-        },
-      ]
-    );
+  const confirmDeleteExercise = async () => {
+    if (!exerciseToDelete) return;
+    
+    try {
+      setIsSaving(true);
+      const { dayId, exerciseId } = exerciseToDelete;
+      setExerciseToDelete(null);
+      await apiClient.deleteExercise(dayId, exerciseId);
+      setTrainingDays((prev) =>
+        prev.map((day) =>
+          day.id === dayId
+            ? { ...day, exercises: day.exercises.filter((e) => e.id !== exerciseId) }
+            : day
+        )
+      );
+    } catch (error) {
+      console.error('Delete exercise error:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Edit Exercise
@@ -317,7 +290,6 @@ export default function ManagePlanScreen() {
 
   const updateExercise = async () => {
     if (!selectedDayId || !selectedExercise || !editExercise.name.trim()) {
-      Alert.alert('Błąd', 'Nazwa ćwiczenia jest wymagana');
       return;
     }
 
@@ -351,9 +323,7 @@ export default function ManagePlanScreen() {
       setShowEditExerciseModal(false);
       setSelectedDayId(null);
       setSelectedExercise(null);
-      Alert.alert('Sukces', 'Ćwiczenie zostało zaktualizowane');
     } catch (error) {
-      Alert.alert('Błąd', 'Nie udało się zaktualizować ćwiczenia');
       console.error('Update exercise error:', error);
     } finally {
       setIsSaving(false);
@@ -485,22 +455,30 @@ export default function ManagePlanScreen() {
                 <View className="p-6 mb-4 border border-gray-600 bg-slate-800 rounded-xl">
                   <View className="flex-row items-center justify-between mb-4">
                     <Text className="flex-1 text-xl font-bold text-white">{item.name}</Text>
-                    <View className="flex-row items-center gap-2">
+                    <View className="flex-row items-center">
                       <TouchableOpacity
-                        onPress={() => openEditDayModal(item)}
-                        className="items-center justify-center w-9 h-9 rounded-lg bg-slate-700"
+                        onPress={() => {
+                          console.log('Edit day pressed:', item.name);
+                          openEditDayModal(item);
+                        }}
+                        className="items-center justify-center mr-2 rounded-lg w-9 h-9 bg-slate-700"
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                       >
                         <Ionicons name="pencil" size={18} color="#AB8BFF" />
                       </TouchableOpacity>
                       <TouchableOpacity
-                        onPress={() => deleteTrainingDay(item.id)}
-                        className="items-center justify-center w-9 h-9 rounded-lg bg-slate-700"
+                        onPress={() => {
+                          console.log('Delete day pressed:', item.name);
+                          setDayToDelete(item.id);
+                        }}
+                        className="items-center justify-center mr-2 rounded-lg w-9 h-9 bg-slate-700"
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                       >
                         <Ionicons name="trash" size={18} color="#EF4444" />
                       </TouchableOpacity>
                       <TouchableOpacity
                         onPress={() => openAddExerciseModal(item.id)}
-                        className="px-3 py-1 ml-2 bg-green-600 rounded-lg"
+                        className="px-3 py-1 bg-green-600 rounded-lg"
                       >
                         <Text className="text-sm font-semibold text-white">+ Ćwiczenie</Text>
                       </TouchableOpacity>
@@ -529,16 +507,24 @@ export default function ManagePlanScreen() {
                                 {exercise.name}
                               </Text>
                             </View>
-                            <View className="flex-row items-center gap-2">
+                            <View className="flex-row items-center">
                               <TouchableOpacity
-                                onPress={() => openEditExerciseModal(item.id, exercise)}
-                                className="p-1.5"
+                                onPress={() => {
+                                  console.log('Edit exercise pressed:', exercise.name);
+                                  openEditExerciseModal(item.id, exercise);
+                                }}
+                                className="p-2 mr-1"
+                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                               >
                                 <Ionicons name="pencil" size={16} color="#AB8BFF" />
                               </TouchableOpacity>
                               <TouchableOpacity
-                                onPress={() => deleteExercise(item.id, exercise.id)}
-                                className="p-1.5"
+                                onPress={() => {
+                                  console.log('Delete exercise pressed:', exercise.name);
+                                  setExerciseToDelete({ dayId: item.id, exerciseId: exercise.id, name: exercise.name });
+                                }}
+                                className="p-2"
+                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                               >
                                 <Ionicons name="trash" size={16} color="#EF4444" />
                               </TouchableOpacity>
@@ -790,13 +776,7 @@ export default function ManagePlanScreen() {
                       <View className="flex-row items-center mb-1">
                         <Text className="text-sm text-gray-400">Tempo</Text>
                         <TouchableOpacity
-                          onPress={() => {
-                            Alert.alert(
-                              "Metodologia Tempo",
-                              "Tempo ćwiczenia określa czas trwania każdej fazy ruchu:\n\n• Pierwsza cyfra: FAZA KONCENTRYCZNA (opuszczanie ciężaru)\n• Druga cyfra: PAUZA NA DOLE (przerwa w pozycji końcowej)\n• Trzecia cyfra: FAZA EKSCENTRYCZNA (podnoszenie ciężaru)\n• Czwarta cyfra: PAUZA NA GÓRZE (przerwa w pozycji wyjściowej)\n\nPrzykład: 3-1-1-0 oznacza 3s w dół, 1s pauza na dole, 1s w górę, brak pauzy na górze.",
-                              [{ text: "Rozumiem" }]
-                            );
-                          }}
+                          onPress={() => setShowTempoInfo(true)}
                           className="p-1 ml-2 rounded-full bg-blue-500/20"
                         >
                           <Text className="text-sm font-bold text-blue-400">?</Text>
@@ -1096,6 +1076,40 @@ export default function ManagePlanScreen() {
           </KeyboardAvoidingView>
         </View>
       </Modal>
+
+      {/* Delete Training Day Confirmation */}
+      <ConfirmDialog
+        visible={dayToDelete !== null}
+        title="Usuń dzień treningowy"
+        message="Czy na pewno chcesz usunąć ten dzień treningowy? Wszystkie ćwiczenia zostaną usunięte."
+        confirmLabel="Usuń"
+        cancelLabel="Anuluj"
+        onConfirm={confirmDeleteTrainingDay}
+        onCancel={() => setDayToDelete(null)}
+        destructive
+      />
+
+      {/* Delete Exercise Confirmation */}
+      <ConfirmDialog
+        visible={exerciseToDelete !== null}
+        title="Usuń ćwiczenie"
+        message={`Czy na pewno chcesz usunąć ćwiczenie "${exerciseToDelete?.name}"?`}
+        confirmLabel="Usuń"
+        cancelLabel="Anuluj"
+        onConfirm={confirmDeleteExercise}
+        onCancel={() => setExerciseToDelete(null)}
+        destructive
+      />
+
+      {/* Tempo Info Dialog */}
+      <ConfirmDialog
+        visible={showTempoInfo}
+        title="Metodologia Tempo"
+        message={"Tempo ćwiczenia określa czas trwania każdej fazy ruchu:\n\n• Pierwsza cyfra: FAZA KONCENTRYCZNA (opuszczanie ciężaru)\n• Druga cyfra: PAUZA NA DOLE (przerwa w pozycji końcowej)\n• Trzecia cyfra: FAZA EKSCENTRYCZNA (podnoszenie ciężaru)\n• Czwarta cyfra: PAUZA NA GÓRZE (przerwa w pozycji wyjściowej)\n\nPrzykład: 3-1-1-0 oznacza 3s w dół, 1s pauza na dole, 1s w górę, brak pauzy na górze."}
+        confirmLabel="Rozumiem"
+        onConfirm={() => setShowTempoInfo(false)}
+        onCancel={() => setShowTempoInfo(false)}
+      />
     </SafeAreaView>
   );
 }

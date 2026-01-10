@@ -9,11 +9,13 @@ This document describes the implementation details of the PowerPlan workout plan
 ## Prerequisites
 
 ### Backend Requirements
+
 - .NET 8.0 SDK
 - SQLite (bundled)
 
 ### Frontend Requirements
-- Node.js 18+ 
+
+- Node.js 18+
 - pnpm (package manager)
 - Expo CLI
 - iOS Simulator (macOS) or Android Emulator
@@ -46,6 +48,7 @@ dotnet run
 ```
 
 The API will be available at:
+
 - HTTP: `http://localhost:5000`
 - Swagger UI: `http://localhost:5000/swagger` (development only)
 
@@ -102,15 +105,18 @@ const API_BASE_URL = 'http://192.168.x.x:5000';
 ### Frontend Configuration
 
 #### Expo (app.json)
+
 - App name and slug configuration
 - Platform-specific settings
 - Build configuration
 
 #### Tailwind (tailwind.config.js)
+
 - Custom theme colors
 - Content paths for NativeWind
 
 #### TypeScript (tsconfig.json)
+
 - Path aliases (`@/` for `src/`)
 - Strict mode enabled
 
@@ -123,6 +129,7 @@ const API_BASE_URL = 'http://192.168.x.x:5000';
 #### Adding a New Entity
 
 1. Create model in `models/`:
+
 ```csharp
 public class NewEntity
 {
@@ -133,11 +140,13 @@ public class NewEntity
 ```
 
 2. Add DbSet to `AppDbContext.cs`:
+
 ```csharp
 public DbSet<NewEntity> NewEntities { get; set; }
 ```
 
 3. Create and apply migration:
+
 ```bash
 dotnet ef migrations add AddNewEntity
 dotnet ef database update
@@ -151,6 +160,7 @@ dotnet ef database update
 
 1. Create DTO classes for request/response
 2. Add endpoint to appropriate controller:
+
 ```csharp
 [HttpPost]
 [Authorize]
@@ -167,6 +177,7 @@ public async Task<IActionResult> CreateResource([FromBody] CreateResourceDto dto
 #### Adding a New Screen
 
 1. Create screen file in appropriate directory:
+
 ```
 app/(tabs)/newscreen.tsx     # For tab screen
 app/newscreen.tsx            # For standalone screen
@@ -174,15 +185,16 @@ app/[id].tsx                 # For dynamic route
 ```
 
 2. Implement the screen component:
+
 ```tsx
 import { View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function NewScreen() {
   return (
-    <SafeAreaView className="flex-1 bg-primary">
-      <View className="p-6">
-        <Text className="text-white text-2xl font-bold">New Screen</Text>
+    <SafeAreaView className='flex-1 bg-primary'>
+      <View className='p-6'>
+        <Text className='text-white text-2xl font-bold'>New Screen</Text>
       </View>
     </SafeAreaView>
   );
@@ -192,6 +204,7 @@ export default function NewScreen() {
 #### Adding a New API Service
 
 Create service in `src/services/`:
+
 ```typescript
 import { apiClient } from '@/config/api';
 
@@ -200,17 +213,18 @@ export const newService = {
     const response = await apiClient.get('/api/resources');
     return response.data;
   },
-  
+
   async create(data: CreateResourceDto) {
     const response = await apiClient.post('/api/resources', data);
     return response.data;
-  }
+  },
 };
 ```
 
 #### Adding a Custom Hook
 
 Create hook in `src/hooks/`:
+
 ```typescript
 import { useState, useEffect, useCallback } from 'react';
 import { newService } from '@/services/newService';
@@ -246,19 +260,19 @@ export function useResources() {
 
 ### Available Components (src/components/ui.tsx)
 
-| Component | Props | Description |
-|-----------|-------|-------------|
-| `LoadingOverlay` | `visible`, `message` | Full-screen loading modal |
-| `LoadingSpinner` | `message`, `size` | Inline loading indicator |
-| `ErrorState` | `message`, `onRetry`, `retryLabel` | Error display with retry |
-| `EmptyState` | `title`, `message`, `actionLabel`, `onAction` | Empty data state |
-| `Card` | `variant`, `onPress`, `className` | Container card |
-| `Badge` | `label`, `variant` | Status badge |
-| `Button` | `label`, `onPress`, `variant`, `size`, `disabled`, `loading` | Action button |
-| `ProgressBar` | `progress`, `color`, `height`, `showLabel` | Progress indicator |
-| `StatCard` | `label`, `value`, `subtitle`, `trend`, `trendValue` | Statistics display |
-| `FilterChip` | `label`, `selected`, `onPress` | Filter toggle |
-| `SectionHeader` | `title`, `subtitle`, `rightElement` | Section heading |
+| Component        | Props                                                        | Description               |
+| ---------------- | ------------------------------------------------------------ | ------------------------- |
+| `LoadingOverlay` | `visible`, `message`                                         | Full-screen loading modal |
+| `LoadingSpinner` | `message`, `size`                                            | Inline loading indicator  |
+| `ErrorState`     | `message`, `onRetry`, `retryLabel`                           | Error display with retry  |
+| `EmptyState`     | `title`, `message`, `actionLabel`, `onAction`                | Empty data state          |
+| `Card`           | `variant`, `onPress`, `className`                            | Container card            |
+| `Badge`          | `label`, `variant`                                           | Status badge              |
+| `Button`         | `label`, `onPress`, `variant`, `size`, `disabled`, `loading` | Action button             |
+| `ProgressBar`    | `progress`, `color`, `height`, `showLabel`                   | Progress indicator        |
+| `StatCard`       | `label`, `value`, `subtitle`, `trend`, `trendValue`          | Statistics display        |
+| `FilterChip`     | `label`, `selected`, `onPress`                               | Filter toggle             |
+| `SectionHeader`  | `title`, `subtitle`, `rightElement`                          | Section heading           |
 
 ### Usage Example
 
@@ -268,14 +282,18 @@ import { Card, Button, EmptyState, LoadingSpinner } from '@/components/ui';
 function MyComponent() {
   const { data, isLoading, error } = useMyData();
 
-  if (isLoading) return <LoadingSpinner message="Loading..." />;
+  if (isLoading) return <LoadingSpinner message='Loading...' />;
   if (error) return <ErrorState message={error} />;
-  if (!data.length) return <EmptyState message="No data found" />;
+  if (!data.length) return <EmptyState message='No data found' />;
 
   return (
-    <Card variant="default">
+    <Card variant='default'>
       {/* Content */}
-      <Button label="Action" onPress={handleAction} variant="primary" />
+      <Button
+        label='Action'
+        onPress={handleAction}
+        variant='primary'
+      />
     </Card>
   );
 }
@@ -352,7 +370,7 @@ apiClient.interceptors.response.use(
       // Handle unauthorized
     }
     return Promise.reject(error);
-  }
+  },
 );
 ```
 
@@ -414,16 +432,17 @@ eas build --platform android --profile preview --local
 
 ### Backend
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `ASPNETCORE_ENVIRONMENT` | Environment name | Development |
-| `Jwt__Secret` | JWT signing key | Required |
-| `Jwt__Issuer` | JWT issuer | PowerPlanAPI |
-| `Jwt__Audience` | JWT audience | PowerPlanApp |
+| Variable                 | Description      | Default      |
+| ------------------------ | ---------------- | ------------ |
+| `ASPNETCORE_ENVIRONMENT` | Environment name | Development  |
+| `Jwt__Secret`            | JWT signing key  | Required     |
+| `Jwt__Issuer`            | JWT issuer       | PowerPlanAPI |
+| `Jwt__Audience`          | JWT audience     | PowerPlanApp |
 
 ### Frontend
 
 Configure in `app.json` or `.env`:
+
 - `API_URL` - Backend API URL
 
 ---
@@ -433,14 +452,17 @@ Configure in `app.json` or `.env`:
 ### Common Issues
 
 #### CORS Errors
+
 - Ensure backend CORS policy includes your frontend origin
 - Check that credentials are properly configured
 
 #### JWT Token Expired
+
 - Token expiration is configurable in appsettings.json
 - Frontend should handle 401 responses and redirect to login
 
 #### Database Migration Errors
+
 ```bash
 # Reset database
 rm powerplan.db
@@ -448,6 +470,7 @@ dotnet ef database update
 ```
 
 #### Metro Bundler Issues
+
 ```bash
 # Clear cache
 pnpm start --clear
@@ -457,10 +480,12 @@ npx expo start -c
 ```
 
 #### iOS Simulator Network Issues
+
 - Use `localhost` instead of `127.0.0.1`
 - Ensure backend is running on correct port
 
 #### Android Emulator Network Issues
+
 - Use `10.0.2.2` instead of `localhost`
 - Check that the backend allows the emulator's IP
 
@@ -469,12 +494,14 @@ npx expo start -c
 ## Code Style Guidelines
 
 ### Backend (C#)
+
 - Use async/await for I/O operations
 - Follow Microsoft naming conventions
 - Use DTOs for API contracts
 - Keep controllers thin, logic in services
 
 ### Frontend (TypeScript)
+
 - Use functional components with hooks
 - Organize imports: React, libraries, local
 - Use TypeScript strict mode
@@ -485,12 +512,15 @@ npx expo start -c
 ## Version Control
 
 ### Branch Naming
+
 - `feature/` - New features
 - `fix/` - Bug fixes
 - `refactor/` - Code refactoring
 
 ### Commit Messages
+
 Follow conventional commits:
+
 - `feat:` - New feature
 - `fix:` - Bug fix
 - `refactor:` - Code refactoring

@@ -9,7 +9,11 @@ export function calculateCurrentWeek(
     start.getMonth(),
     start.getDate(),
   );
-  const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const nowDateOnly = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+  );
 
   const msPerDay = 1000 * 60 * 60 * 24;
   const daysDiff = Math.floor(

@@ -125,13 +125,17 @@ export function HomeScreen() {
               ) : null}
               <View className='flex-row gap-4'>
                 <Text className='text-sm text-purple-100'>
-                   {activePlan.weekDuration} tygodni
+                  {activePlan.weekDuration} tygodni
                 </Text>
                 <Text className='text-sm text-purple-100'>
-                  📍 Tydzień {calculateCurrentWeek(activePlan.createdAt, activePlan.weekDuration)}
+                  📍 Tydzień{' '}
+                  {calculateCurrentWeek(
+                    activePlan.createdAt,
+                    activePlan.weekDuration,
+                  )}
                 </Text>
                 <Text className='text-sm text-purple-100'>
-                   {activePlan.trainingDaysCount} dni
+                  {activePlan.trainingDaysCount} dni
                 </Text>
               </View>
             </View>

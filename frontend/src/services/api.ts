@@ -305,6 +305,12 @@ class ApiClient {
     });
   }
 
+  async deleteWorkoutPlan(id: string): Promise<void> {
+    await this.request(API_ENDPOINTS.WORKOUT_PLANS.DELETE(id), {
+      method: 'DELETE',
+    });
+  }
+
   // Training Days
   async getTrainingDays(planId: string): Promise<TrainingDay[]> {
     return this.request<TrainingDay[]>(
@@ -386,7 +392,9 @@ class ApiClient {
   }
 
   // Workout Sessions
-  async startWorkoutSession(data: StartWorkoutSessionRequest): Promise<WorkoutSession> {
+  async startWorkoutSession(
+    data: StartWorkoutSessionRequest,
+  ): Promise<WorkoutSession> {
     return this.request<WorkoutSession>(API_ENDPOINTS.WORKOUT_SESSIONS.START, {
       method: 'POST',
       body: JSON.stringify({
@@ -412,11 +420,18 @@ class ApiClient {
     );
   }
 
-  async getWorkoutSessionHistory(workoutPlanId?: string): Promise<WorkoutSession[]> {
-    const qs = workoutPlanId ? `?workoutPlanId=${encodeURIComponent(workoutPlanId)}` : '';
-    return this.request<WorkoutSession[]>(`${API_ENDPOINTS.WORKOUT_SESSIONS.HISTORY}${qs}`, {
-      method: 'GET',
-    });
+  async getWorkoutSessionHistory(
+    workoutPlanId?: string,
+  ): Promise<WorkoutSession[]> {
+    const qs = workoutPlanId
+      ? `?workoutPlanId=${encodeURIComponent(workoutPlanId)}`
+      : '';
+    return this.request<WorkoutSession[]>(
+      `${API_ENDPOINTS.WORKOUT_SESSIONS.HISTORY}${qs}`,
+      {
+        method: 'GET',
+      },
+    );
   }
 
   async getSuggestedWeights(params: {
@@ -424,7 +439,8 @@ class ApiClient {
     trainingDayId: string;
     weekNumber: number;
   }): Promise<ExerciseWeightSuggestion[]> {
-    const qs = `?workoutPlanId=${encodeURIComponent(params.workoutPlanId)}` +
+    const qs =
+      `?workoutPlanId=${encodeURIComponent(params.workoutPlanId)}` +
       `&trainingDayId=${encodeURIComponent(params.trainingDayId)}` +
       `&weekNumber=${encodeURIComponent(String(params.weekNumber))}`;
     return this.request<ExerciseWeightSuggestion[]>(

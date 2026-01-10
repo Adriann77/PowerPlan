@@ -8,11 +8,11 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { apiClient } from '../src/services/api';
+import { LoadingOverlay, Button } from '../src/components';
 
 interface PlanFormData {
   name: string;
@@ -38,9 +38,12 @@ export default function CreatePlanScreen() {
       Alert.alert('Błąd', 'Nazwa planu jest wymagana');
       return;
     }
-    if (step === 2 && !formData.duration.trim()) {
-      Alert.alert('Błąd', 'Czas trwania jest wymagany');
-      return;
+    if (step === 2) {
+      const durationNum = parseInt(formData.duration, 10);
+      if (!formData.duration.trim() || isNaN(durationNum) || durationNum < 1) {
+        Alert.alert('Błąd', 'Podaj prawidłową liczbę tygodni (minimum 1)');
+        return;
+      }
     }
     if (step < 3) {
       setStep(step + 1);
@@ -54,12 +57,9 @@ export default function CreatePlanScreen() {
           weekDuration: parseInt(formData.duration, 10),
           isActive: false,
         });
-        Alert.alert('Sukces', 'Plan treningowy został utworzony!', [
-          {
-            text: 'OK',
-            onPress: () => router.push(`/manage-plan/${plan.id}`),
-          },
-        ]);
+        
+        // Navigate directly to manage plan screen
+        router.replace(`/manage-plan/${plan.id}`);
       } catch (error) {
         Alert.alert(
           'Błąd',
@@ -67,7 +67,6 @@ export default function CreatePlanScreen() {
             ? error.message
             : 'Nie udało się utworzyć planu',
         );
-      } finally {
         setIsCreating(false);
       }
     }
@@ -95,8 +94,10 @@ export default function CreatePlanScreen() {
               onChangeText={(value) => updateFormData('name', value)}
               placeholder='np. Plan Siłowy dla Początkujących'
               placeholderTextColor='#9CA3AF'
-              className='px-4 py-3 text-lg text-white border border-gray-600 rounded-lg bg-slate-800'
+              className='px-4 py-4 text-lg text-white border border-gray-600 rounded-xl bg-slate-800'
               autoFocus
+              returnKeyType="next"
+              onSubmitEditing={nextStep}
             />
           </View>
         );
@@ -112,13 +113,22 @@ export default function CreatePlanScreen() {
             </Text>
             <TextInput
               value={formData.duration}
-              onChangeText={(value) => updateFormData('duration', value)}
+              onChangeText={(value) => {
+                // Only allow numbers
+                const numericValue = value.replace(/[^0-9]/g, '');
+                updateFormData('duration', numericValue);
+              }}
               placeholder='np. 8'
               placeholderTextColor='#9CA3AF'
-              keyboardType='decimal-pad'
-              className='px-4 py-3 text-lg text-white border border-gray-600 rounded-lg bg-slate-800'
+              keyboardType='number-pad'
+              className='px-4 py-4 text-lg text-white border border-gray-600 rounded-xl bg-slate-800'
               autoFocus
+              returnKeyType="next"
+              onSubmitEditing={nextStep}
             />
+            <Text className='mt-3 text-sm text-gray-500'>
+              Typowe bloki treningowe: 4, 6, 8 lub 12 tygodni
+            </Text>
           </View>
         );
 
@@ -138,9 +148,22 @@ export default function CreatePlanScreen() {
               placeholderTextColor='#9CA3AF'
               multiline
               numberOfLines={4}
-              className='h-32 px-4 py-3 text-lg text-white border border-gray-600 rounded-lg bg-slate-800'
+              className='h-32 px-4 py-4 text-lg text-white border border-gray-600 rounded-xl bg-slate-800'
               textAlignVertical='top'
             />
+            
+            {/* Summary */}
+            <View className='mt-6 p-4 bg-slate-800 rounded-xl border border-gray-700'>
+              <Text className='text-lg font-bold text-white mb-3'>Podsumowanie</Text>
+              <View className='flex-row justify-between mb-2'>
+                <Text className='text-gray-400'>Nazwa:</Text>
+                <Text className='text-white font-medium'>{formData.name}</Text>
+              </View>
+              <View className='flex-row justify-between'>
+                <Text className='text-gray-400'>Czas trwania:</Text>
+                <Text className='text-white font-medium'>{formData.duration} tygodni</Text>
+              </View>
+            </View>
           </View>
         );
 
@@ -151,59 +174,70 @@ export default function CreatePlanScreen() {
 
   return (
     <SafeAreaView className='flex-1 bg-slate-900'>
+      <LoadingOverlay 
+        visible={isCreating} 
+        message="Tworzenie planu treningowego..." 
+      />
+      
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className='flex-1'
       >
         <View className='flex-1'>
           {/* Header */}
-          <View className='px-6 pt-4 pb-6 border-b border-gray-600'>
+          <View className='px-6 pt-4 pb-6 border-b border-gray-700'>
             <TouchableOpacity
               onPress={() => (step === 1 ? router.back() : prevStep())}
               className='self-start mb-4'
             >
               <Text className='text-base text-purple-400'>
-                ← {step === 1 ? 'Wróć' : 'Poprzedni'}
+                ← {step === 1 ? 'Anuluj' : 'Wstecz'}
               </Text>
             </TouchableOpacity>
 
             {/* Progress Indicator */}
-            <View className='flex-row justify-center mb-4'>
+            <View className='flex-row justify-center items-center mb-2'>
               {[1, 2, 3].map((stepNumber) => (
-                <View
-                  key={stepNumber}
-                  className={`w-8 h-8 rounded-full mx-2 justify-center items-center ${
-                    stepNumber <= step ? 'bg-purple-600' : 'bg-gray-600'
-                  }`}
-                >
-                  <Text className='text-sm font-semibold text-white'>
-                    {stepNumber}
-                  </Text>
-                </View>
+                <React.Fragment key={stepNumber}>
+                  <View
+                    className={`w-10 h-10 rounded-full justify-center items-center ${
+                      stepNumber <= step ? 'bg-purple-600' : 'bg-gray-700'
+                    }`}
+                  >
+                    <Text className='text-sm font-bold text-white'>
+                      {stepNumber}
+                    </Text>
+                  </View>
+                  {stepNumber < 3 && (
+                    <View 
+                      className={`w-12 h-1 mx-1 rounded ${
+                        stepNumber < step ? 'bg-purple-600' : 'bg-gray-700'
+                      }`} 
+                    />
+                  )}
+                </React.Fragment>
               ))}
             </View>
+            <Text className='text-center text-gray-400 text-sm'>
+              Krok {step} z 3
+            </Text>
           </View>
 
           {/* Form Content */}
-          <ScrollView className='flex-1'>{renderStepContent()}</ScrollView>
+          <ScrollView className='flex-1' keyboardShouldPersistTaps="handled">
+            {renderStepContent()}
+          </ScrollView>
 
           {/* Navigation Buttons */}
-          <View className='px-6 py-6 border-t border-gray-600'>
-            <TouchableOpacity
+          <View className='px-6 py-6 border-t border-gray-700'>
+            <Button
+              label={step === 3 ? '✓ Utwórz Plan' : 'Dalej →'}
               onPress={nextStep}
+              variant={step === 3 ? 'success' : 'primary'}
+              size="large"
+              fullWidth
               disabled={isCreating}
-              className={`rounded-lg py-4 items-center ${
-                isCreating ? 'bg-gray-600' : 'bg-purple-600'
-              }`}
-            >
-              {isCreating ? (
-                <ActivityIndicator color='#ffffff' />
-              ) : (
-                <Text className='text-lg font-semibold text-white'>
-                  {step === 3 ? 'Utwórz Plan' : 'Dalej'}
-                </Text>
-              )}
-            </TouchableOpacity>
+            />
           </View>
         </View>
       </KeyboardAvoidingView>

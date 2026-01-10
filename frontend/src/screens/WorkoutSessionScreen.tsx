@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   SafeAreaView,
   Text,
@@ -12,6 +12,7 @@ import {
 import { useLocalSearchParams, router } from 'expo-router';
 import { apiClient, TrainingDay, WorkoutPlan } from '../services/api';
 import { calculateCurrentWeek } from '../utils/week';
+import { LoadingOverlay } from '../components';
 
 type ExerciseProgress = {
   exerciseId: string;
@@ -25,9 +26,10 @@ export function WorkoutSessionScreen() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [weekNumber, setWeekNumber] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Theme colors for WorkoutSessionScreen (keeping for now)
+  // Theme colors for WorkoutSessionScreen
   const themeColors = {
     background: '#0f0d24',
     surface: '#1a1a2e',
@@ -260,11 +262,17 @@ export function WorkoutSessionScreen() {
   const updateWeight = (weight: string) => {
     if (!currentExercise) return;
 
+    // Only allow numbers and single decimal point
+    const sanitized = weight
+      .replace(',', '.') // Replace comma with dot
+      .replace(/[^0-9.]/g, '') // Remove non-numeric except dot
+      .replace(/(\..*)\./g, '$1'); // Only allow one decimal point
+
     setExerciseProgress({
       ...exerciseProgress,
       [currentExercise.id]: {
         ...progress!,
-        weight,
+        weight: sanitized,
       },
     });
   };
@@ -283,22 +291,23 @@ export function WorkoutSessionScreen() {
     }
   };
 
-  const saveWorkout = () => {
+  const saveWorkout = async () => {
     if (!trainingDay || !sessionId) {
       Alert.alert('Błąd', 'Nie udało się zapisać treningu (brak sesji).');
       return;
     }
 
-    (async () => {
-      try {
-        const payload = {
-          notes: null,
-          exerciseLogs: trainingDay.exercises.map((ex) => {
-            const p = exerciseProgress[ex.id];
-            const weightStr = (p?.weight ?? '').trim().replace(',', '.');
-            const parsed = weightStr.length ? Number(weightStr) : NaN;
+    setIsSaving(true);
 
-            return {
+    try {
+      const payload = {
+        notes: null,
+        exerciseLogs: trainingDay.exercises.map((ex) => {
+          const p = exerciseProgress[ex.id];
+          const weightStr = (p?.weight ?? '').trim().replace(',', '.');
+          const parsed = weightStr.length ? Number(weightStr) : NaN;
+
+          return {
               exerciseId: ex.id,
               startingWeight: Number.isFinite(parsed) ? parsed : null,
               isCompleted: (p?.completedSets ?? 0) >= ex.sets,
@@ -307,25 +316,17 @@ export function WorkoutSessionScreen() {
         };
 
         await apiClient.completeWorkoutSession(sessionId, payload);
-
-        Alert.alert(
-          'Trening zapisany',
-          'Twój trening został pomyślnie zapisany!',
-          [
-            {
-              text: 'OK',
-              onPress: () => router.back(),
-            },
-          ],
-        );
+        
+        // Navigate immediately to home tab
+        router.replace('/(tabs)');
       } catch (e) {
+        setIsSaving(false);
         Alert.alert(
           'Błąd',
           e instanceof Error ? e.message : 'Nie udało się zapisać treningu',
         );
       }
-    })();
-  };
+    };
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -389,6 +390,11 @@ export function WorkoutSessionScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background }}>
+      <LoadingOverlay 
+        visible={isSaving} 
+        message="Zapisywanie treningu..." 
+      />
+      
       {/* Fixed Header */}
       <View
         style={{
@@ -427,7 +433,8 @@ export function WorkoutSessionScreen() {
             color: themeColors.palette.text.muted,
           }}
         >
-          {weekNumber ? `Tydzień ${weekNumber} • ` : ''}Ćwiczenie {currentExerciseIndex + 1} z {totalExercises}
+          {weekNumber ? `Tydzień ${weekNumber} • ` : ''}Ćwiczenie{' '}
+          {currentExerciseIndex + 1} z {totalExercises}
         </Text>
       </View>
 
@@ -614,7 +621,7 @@ export function WorkoutSessionScreen() {
                 marginBottom: themeColors.spacing.md,
               }}
             >
-              Obciążenie
+              Obciążenie (kg)
             </Text>
             <TextInput
               style={{
@@ -622,16 +629,28 @@ export function WorkoutSessionScreen() {
                 borderRadius: themeColors.radii.md,
                 padding: themeColors.spacing.md,
                 color: themeColors.palette.text.primary,
-                fontSize: 16,
+                fontSize: 18,
+                fontWeight: '600',
                 borderWidth: 1,
                 borderColor: themeColors.palette.border,
+                textAlign: 'center',
               }}
-              placeholder='Wpisz ciężar (kg)'
+              placeholder='0'
               placeholderTextColor={themeColors.palette.text.muted}
-              keyboardType='decimal-pad'
+              keyboardType='numeric'
               value={progress?.weight || ''}
               onChangeText={updateWeight}
             />
+            <Text
+              style={{
+                color: themeColors.palette.text.muted,
+                fontSize: 12,
+                marginTop: 8,
+                textAlign: 'center',
+              }}
+            >
+              Wprowadź ciężar w kilogramach
+            </Text>
           </View>
 
           {/* Series Progress */}

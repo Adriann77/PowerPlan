@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   RefreshControl,
   ScrollView,
-  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -43,25 +42,25 @@ export function ConfirmDialog({
       <TouchableOpacity
         activeOpacity={1}
         onPress={onCancel}
-        className='flex-1 items-center justify-center bg-black/70'
+        className='items-center justify-center flex-1 bg-black/70'
       >
         <TouchableOpacity
           activeOpacity={1}
           onPress={() => {}}
         >
           <View className='bg-slate-800 rounded-2xl p-6 mx-6 min-w-[300px] max-w-[400px]'>
-            <Text className='text-white text-xl font-bold mb-2 text-center'>
+            <Text className='mb-2 text-xl font-bold text-center text-white'>
               {title}
             </Text>
-            <Text className='text-gray-400 text-base mb-6 text-center'>
+            <Text className='mb-6 text-base text-center text-gray-400'>
               {message}
             </Text>
             <View className='flex-row gap-3'>
               <TouchableOpacity
                 onPress={onCancel}
-                className='flex-1 bg-slate-600 rounded-lg py-3 px-4'
+                className='flex-1 px-4 py-3 rounded-lg bg-slate-600'
               >
-                <Text className='text-white font-semibold text-center'>
+                <Text className='font-semibold text-center text-white'>
                   {cancelLabel}
                 </Text>
               </TouchableOpacity>
@@ -69,7 +68,7 @@ export function ConfirmDialog({
                 onPress={onConfirm}
                 className={`flex-1 rounded-lg py-3 px-4 ${destructive ? 'bg-red-600' : 'bg-purple-600'}`}
               >
-                <Text className='text-white font-semibold text-center'>
+                <Text className='font-semibold text-center text-white'>
                   {confirmLabel}
                 </Text>
               </TouchableOpacity>
@@ -99,13 +98,13 @@ export function LoadingOverlay({
       visible={visible}
       animationType='fade'
     >
-      <View className='flex-1 items-center justify-center bg-black/70'>
-        <View className='bg-slate-800 rounded-2xl p-8 items-center mx-6'>
+      <View className='items-center justify-center flex-1 bg-black/70'>
+        <View className='items-center p-8 mx-6 bg-slate-800 rounded-2xl'>
           <ActivityIndicator
             size='large'
             color='#AB8BFF'
           />
-          <Text className='text-white text-base mt-4 text-center'>
+          <Text className='mt-4 text-base text-center text-white'>
             {message}
           </Text>
         </View>
@@ -125,13 +124,13 @@ export function LoadingSpinner({
   size = 'large',
 }: LoadingSpinnerProps) {
   return (
-    <View className='flex-1 items-center justify-center py-20'>
+    <View className='items-center justify-center flex-1 py-20'>
       <ActivityIndicator
         size={size}
         color='#AB8BFF'
       />
       {message && (
-        <Text className='text-gray-400 mt-4 text-base'>{message}</Text>
+        <Text className='mt-4 text-base text-gray-400'>{message}</Text>
       )}
     </View>
   );
@@ -150,14 +149,14 @@ export function ErrorState({
   retryLabel = 'Spróbuj ponownie',
 }: ErrorStateProps) {
   return (
-    <View className='bg-red-900/20 border border-red-500 rounded-xl p-6'>
-      <Text className='text-red-400 text-base mb-2'>{message}</Text>
+    <View className='p-6 border border-red-500 bg-red-900/20 rounded-xl'>
+      <Text className='mb-2 text-base text-red-400'>{message}</Text>
       {onRetry && (
         <TouchableOpacity
           onPress={onRetry}
-          className='mt-4 bg-red-500 rounded-lg py-3 px-4 self-start'
+          className='self-start px-4 py-3 mt-4 bg-red-500 rounded-lg'
         >
-          <Text className='text-white font-semibold'>{retryLabel}</Text>
+          <Text className='font-semibold text-white'>{retryLabel}</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -179,19 +178,19 @@ export function EmptyState({
   onAction,
 }: EmptyStateProps) {
   return (
-    <View className='bg-slate-800 rounded-xl p-6 items-center'>
+    <View className='items-center p-6 bg-slate-800 rounded-xl'>
       {title && (
-        <Text className='text-white text-lg font-bold mb-2 text-center'>
+        <Text className='mb-2 text-lg font-bold text-center text-white'>
           {title}
         </Text>
       )}
-      <Text className='text-gray-400 text-base text-center'>{message}</Text>
+      <Text className='text-base text-center text-gray-400'>{message}</Text>
       {actionLabel && onAction && (
         <TouchableOpacity
           onPress={onAction}
-          className='mt-4 bg-purple-600 rounded-lg py-3 px-6'
+          className='px-6 py-3 mt-4 bg-purple-600 rounded-lg'
         >
-          <Text className='text-white font-semibold'>{actionLabel}</Text>
+          <Text className='font-semibold text-white'>{actionLabel}</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -230,7 +229,7 @@ export function SectionHeader({
       <View className='flex-1'>
         <Text className='text-xl font-bold text-white'>{title}</Text>
         {subtitle && (
-          <Text className='text-gray-400 text-sm mt-1'>{subtitle}</Text>
+          <Text className='mt-1 text-sm text-gray-400'>{subtitle}</Text>
         )}
       </View>
       {rightElement}
@@ -296,7 +295,7 @@ export function Badge({ label, variant = 'default' }: BadgeProps) {
 
   return (
     <View className={`px-3 py-1 rounded-full ${variantStyles[variant]}`}>
-      <Text className='text-white text-xs font-semibold'>{label}</Text>
+      <Text className='text-xs font-semibold text-white'>{label}</Text>
     </View>
   );
 }
@@ -386,7 +385,7 @@ export function ProgressBar({
   return (
     <View className='w-full'>
       <View
-        className='w-full bg-slate-700 rounded-full overflow-hidden'
+        className='w-full overflow-hidden rounded-full bg-slate-700'
         style={{ height }}
       >
         <View
@@ -395,7 +394,7 @@ export function ProgressBar({
         />
       </View>
       {showLabel && (
-        <Text className='text-gray-400 text-xs mt-1 text-right'>
+        <Text className='mt-1 text-xs text-right text-gray-400'>
           {Math.round(clampedProgress)}%
         </Text>
       )}
@@ -432,11 +431,11 @@ export function StatCard({
   };
 
   return (
-    <View className='bg-slate-800 rounded-xl p-4 flex-1'>
+    <View className='flex-1 p-4 bg-slate-800 rounded-xl'>
       <View className='flex-row items-center justify-between mb-2'>
-        <Text className='text-gray-400 text-sm'>{label}</Text>
+        <Text className='text-sm text-gray-400'>{label}</Text>
       </View>
-      <Text className='text-white text-2xl font-bold'>{value}</Text>
+      <Text className='text-2xl font-bold text-white'>{value}</Text>
       {(subtitle || (trend && trendValue)) && (
         <View className='flex-row items-center mt-1'>
           {trend && trendValue && (
@@ -445,7 +444,7 @@ export function StatCard({
             </Text>
           )}
           {subtitle && (
-            <Text className='text-gray-500 text-sm'>{subtitle}</Text>
+            <Text className='text-sm text-gray-500'>{subtitle}</Text>
           )}
         </View>
       )}
@@ -515,10 +514,10 @@ export function Select({
 
   return (
     <View>
-      {label && <Text className='text-white font-semibold mb-2'>{label}</Text>}
+      {label && <Text className='mb-2 font-semibold text-white'>{label}</Text>}
       <TouchableOpacity
         onPress={() => setIsOpen(true)}
-        className='flex-row items-center justify-between bg-slate-800 border border-gray-600 rounded-xl px-4 py-3'
+        className='flex-row items-center justify-between px-4 py-3 border border-gray-600 bg-slate-800 rounded-xl'
       >
         <Text
           className={`text-base ${selectedOption ? 'text-white' : 'text-gray-400'}`}
@@ -541,7 +540,7 @@ export function Select({
         <TouchableOpacity
           activeOpacity={1}
           onPress={() => setIsOpen(false)}
-          className='flex-1 bg-black/60 justify-end'
+          className='justify-end flex-1 bg-black/60'
         >
           <View className='bg-slate-800 rounded-t-3xl max-h-[60%]'>
             <View className='flex-row items-center justify-between px-6 py-4 border-b border-gray-700'>

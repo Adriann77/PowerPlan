@@ -1,0 +1,61 @@
+# PowerPlan – Testing & Validation
+
+## 1. Cel dokumentu
+
+Celem dokumentu jest opis podejścia do testowania aplikacji PowerPlan
+(mobilna aplikacja do zarządzania planem treningowym i monitorowania progresji),
+zakres testów oraz scenariusze testowe dla kluczowych funkcjonalności.
+
+## 2. Zakres testów
+
+W tej iteracji testujemy przede wszystkim:
+
+- Rejestrację użytkownika
+- Logowanie użytkownika
+- Tworzenie planu treningowego
+- Edycję i podgląd planu treningowego
+- Rejestrowanie wykonanego treningu
+- Przegląd historii treningów
+
+Testy obejmują:
+
+- Testy funkcjonalne (manualne)
+- Podstawowe testy walidacji danych
+- Podstawowe testy błędów (np. niepoprawne dane logowania)
+
+## 3. Środowisko testowe
+
+- Backend: .NET API (PowerPlanAPI), uruchomione lokalnie
+- Baza danych: PostgreSQL (lokalnie / Docker)
+- Frontend: React Native / Expo (wersja web lub urządzenie/emulator)
+- Adresy:
+  - API: `http://localhost:<port>` (np. 5226)
+  - Frontend (web): `http://localhost:<port>` (np. 19006 / 8081)
+
+## 4. Scenariusze testowe
+
+### 4.1. Rejestracja użytkownika
+
+**TC-REG-01 – Rejestracja poprawnymi danymi**  
+Oczekiwany rezultat: użytkownik zostaje utworzony.
+
+**TC-REG-02 – Zły email**  
+Oczekiwany rezultat: walidacja odrzuca dane.
+
+### 4.2. Logowanie
+
+**TC-LOG-01 – Poprawne logowanie**  
+**TC-LOG-02 – Błędne hasło**
+
+### 4.3. Tworzenie planu
+
+**TC-PLAN-01 – Stworzenie poprawnego planu**  
+**TC-PLAN-02 – Brak wymaganych pól**
+
+*(w razie potrzeby dopiszemy kolejne)*
+
+## 5. Kryteria akceptacji
+
+- Wszystkie krytyczne scenariusze przechodzą.
+- Brak błędów blokujących.
+- Niepoprawne dane są odrzucane odpowiednimi komunikatami.
